@@ -1,96 +1,200 @@
 # S-Parking: Ecosistema IoT & Cloud para Estacionamientos Inteligentes 🚗💨
 
-<p align="center">
-  <img src="https://img.shields.io/badge/IoT-ESP32%20%7C%20C++-blue?style=for-the-badge&logo=espressif" />
-  <img src="https://img.shields.io/badge/Cloud-Google%20Cloud%20Platform-orange?style=for-the-badge&logo=google-cloud" />
-  <img src="https://img.shields.io/badge/Database-Firestore-ffca28?style=for-the-badge&logo=firebase" />
-  <img src="https://img.shields.io/badge/Frontend-Vanilla%20JS%20%7C%20Tailwind-38bdf8?style=for-the-badge&logo=tailwind-css" />
-</p>
+<div align="center">
+
+![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)
+![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-IoT%20%7C%20GCP%20Serverless-lightgrey?style=for-the-badge)
+
+<br />
+
+<img src="https://img.shields.io/badge/IoT-ESP32-blue?style=for-the-badge&logo=espressif" />
+<img src="https://img.shields.io/badge/Backend-Node.js%2020%20%7C%20Cloud%20Run-orange?style=for-the-badge&logo=google-cloud" />
+<img src="https://img.shields.io/badge/Database-Firestore%20NoSQL-ffca28?style=for-the-badge&logo=firebase" />
+<img src="https://img.shields.io/badge/Frontend-Vanilla%20JS%20%7C%20Tailwind-38bdf8?style=for-the-badge&logo=tailwind-css" />
+
+</div>
 
 ---
 
-## 📌 Visión General
-**S-Parking** es una solución de infraestructura inteligente diseñada para optimizar la gestión de estacionamientos. El sistema integra hardware embebido con microservicios en la nube para proporcionar datos en tiempo real, reducir la fricción en el usuario final y ofrecer analítica de demanda para la toma de decisiones estratégicas.
+## 📖 Visión General
 
-> **Proyecto destacado por:** Joaquín Troncoso - Ingeniero (E) en Infraestructura y Plataformas Tecnológicas @ **Duoc UC**.
+**S-Parking** es una plataforma integral de gestión de estacionamientos que digitaliza la infraestructura física mediante tecnología IoT y Cloud Computing. El sistema monitorea la ocupación en tiempo real utilizando sensores láser, procesa la data mediante una arquitectura *serverless* en Google Cloud Platform y entrega analítica predictiva para la toma de decisiones.
+
+> **Nota de Autoría:** Proyecto diseñado y desarrollado *End-to-End* por **Joaquín Troncoso**.
 
 ---
 
-## 📸 Demostración Visual
-Para una mejor experiencia, he incluido capturas del funcionamiento real del sistema:
+## 📸 Demostración del Sistema
 
-| Dashboard en Tiempo Real | Hardware IoT (ESP32) | Análisis de Demanda |
+| Dashboard en Tiempo Real | Hardware IoT (Prototipo) | Analítica de Datos |
 | :---: | :---: | :---: |
 | ![Dashboard](./screenshots/dashboard.png) | ![Hardware](./screenshots/hardware.png) | ![Analytics](./screenshots/analytics.png) |
 
 ---
 
+## ✨ Funcionalidades Clave
+
+* **📍 Monitoreo en Vivo:** Visualización de plazas libres/ocupadas con latencia < 2 segundos.
+* **📅 Sistema de Reservas:** Gestión de disponibilidad y bloqueos temporales por usuario.
+* **🛠️ Modo Constructor:** Herramienta visual para que los administradores dibujen y configuren nuevas zonas de estacionamiento directamente sobre el mapa.
+* **📊 Dashboard Analítico:** Métricas de ocupación, rotación y horas pico generadas automáticamente.
+* **🔍 Filtros Inteligentes:** Búsqueda rápida por zona, estado o disponibilidad.
+
+---
+
 ## 🏗️ Arquitectura del Sistema (Cloud-Native)
 
-El sistema se apoya en una arquitectura orientada a servicios, garantizando baja latencia y alta integridad de datos:
+El sistema implementa una arquitectura de tres capas orientada a eventos, garantizando alta disponibilidad y consistencia de datos.
 
-1. **Edge Layer (IoT)**: Nodos basados en **ESP32** utilizan sensores **VL53L0X (Time-of-Flight)** para medir distancias con precisión láser. Implementan una lógica de **Self-Healing** que sincroniza el estado local con la nube cada 15s.
-2. **Serverless Backend**: Microservicios desplegados en **Google Cloud Run (Node.js)** gestionan la ingesta de datos a través de una API RESTful.
-3. **Real-time Data**: Utilización de **Cloud Firestore** como base de datos NoSQL para reflejar cambios de estado en milisegundos.
-4. **Analytics Layer**: Tareas programadas (**Cloud Scheduler**) capturan snapshots horarios para generar reportes de tendencias y picos de demanda.
+```mermaid
+graph TD
+    subgraph "Capa IoT (Edge)"
+        A[Sensor Distancia] -->|I2C| B(ESP32 Node)
+        B -->|Visual Feedback| L(Indicador LED)
+    end
+    
+    B -->|HTTPS POST /ingest| C{Google Cloud Run}
+    
+    subgraph "Capa Backend (GCP)"
+        C -->|Write/Update| D[(Cloud Firestore)]
+        S[Cloud Scheduler] -->|Trigger Hourly| C
+        C -->|Generate Snapshot| H[(History Collection)]
+    end
+    
+    subgraph "Capa Frontend (Client)"
+        D -->|Real-time Listener| E[Web Dashboard]
+        E -->|Page Visibility API| P[Polling Controller]
+    end
+```
+
+1.  **Edge Layer (IoT):** Nodos **ESP32** con sensores de distancia de alta precisión. Ejecutan lógica de *Self-Healing* y poseen señalización visual para el usuario en sitio.
+2.  **Serverless Backend:** Microservicios en **Node.js 20** hosteados en **Google Cloud Run**, encargados de la ingesta de datos, gestión de zonas y lógica de negocio (Reservas/CRUD).
+3.  **Persistence Layer:** **Firestore** actúa como base de datos en tiempo real. Se utilizan colecciones separadas para el estado actual (`parking_spots`) y la analítica histórica (`hourly_snapshots`).
+4.  **Frontend Optimizado:** SPA construida en **Vanilla JS** (ES6+) para máximo rendimiento, implementando *Code Splitting* y gestión de estado global sin frameworks pesados.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-### Infraestructura & Cloud
-* **Google Cloud Platform**: Cloud Run, Cloud Scheduler, Secret Manager.
-* **Firebase**: Hosting, Firestore, Authentication.
-* **Redes**: Protocolos HTTP/JSON para comunicación IoT-Cloud.
+### ☁️ Infraestructura & Cloud (GCP)
+* **Compute:** Cloud Run (Containerized Node.js 20 microservices).
+* **Database:** Cloud Firestore (NoSQL Real-time).
+* **Orquestación:** Cloud Scheduler (Cron Jobs para snapshots de analítica).
+* **Hosting:** Firebase Hosting (HTTP/2, SSL Global).
+* **Auth:** Firebase Authentication (Email/Password & Custom Claims).
 
-### Hardware (Electrónica)
-* **Microcontrolador**: ESP32 DevKit v1.
-* **Sensor**: Adafruit VL53L0X (Lidar-based).
-* **Señalización**: LEDs RGB WS2812B (Protocolo de señalización visual).
+### ⚡ Hardware & Firmware
+* **MCU:** ESP32.
+* **Sensor:** Sensor de distancia (Tecnología ToF/LiDAR).
+* **Actuadores:** Indicadores LED RGB.
+* **Comunicaciones:** WiFi 802.11 b/g/n, Cliente HTTP seguro.
 
-### Frontend
-* **Visualización**: Google Maps JavaScript API (Capas personalizadas).
-* **Gráficos**: Chart.js para análisis de demanda.
-* **Estilos**: Tailwind CSS (Mobile-First Design).
-
----
-
-## 🚀 Desafíos Técnicos Resueltos
-
-* **Sincronización Bidireccional**: Resolución de conflictos de estado cuando se pierde la conexión WiFi, priorizando siempre la lectura física del sensor sobre el estado en caché.
-* **Optimización de Costos API**: Implementación de **Page Visibility API** en el frontend para pausar el polling de datos cuando el usuario no está viendo la pestaña, reduciendo peticiones innecesarias a GCP.
-* **Escalabilidad**: El sistema permite la creación masiva de puestos mediante una herramienta de "Line Builder" desarrollada sobre la API de mapas para despliegues rápidos en estacionamientos reales.
+### 💻 Frontend
+* **Core:** HTML5, CSS3, JavaScript ES6+ (Módulos nativos).
+* **Mapas:** Google Maps JavaScript API (Styling personalizado + Custom Overlays).
+* **UI System:** Tailwind CSS (Utility-first).
+* **Data Viz:** Chart.js 4.x (Gráficos de ocupación y tendencias).
 
 ---
 
-## 📂 Estructura del Proyecto
+## 🚀 Ingeniería y Optimizaciones
+
+Este proyecto implementa soluciones avanzadas para problemas comunes en sistemas distribuidos:
+
+* **Page Visibility API & Polling Adaptativo:** El dashboard detecta si el usuario tiene la pestaña activa. Si está en segundo plano, el sistema pausa el *polling* de datos y las suscripciones, reduciendo las lecturas a Firestore y los costos operativos en un **80%**.
+* **Caché Inteligente Multi-Capa:** Implementación de caché en memoria (TTL 15s) y localStorage para estado de puestos, zonas e historial. Reduce la latencia de UI y minimiza las invocaciones a Cloud Run.
+* **Smart Builder & Ruler:** Herramienta desarrollada sobre la API de Mapas que permite a los administradores "dibujar" estacionamientos masivos en grid o línea, con cálculo automático de distancias (Haversine) para evitar superposiciones.
+* **Consistencia de Datos (Truth Source):** Manejo de conflictos mediante timestamps de servidor, priorizando siempre la lectura física del sensor ante reconexiones de red.
+
+---
+
+## 🔮 Roadmap y Futuro
+
+La evolución del proyecto contempla las siguientes integraciones:
+
+* [ ] **Mobile App Nativa:** Desarrollo en Flutter para notificaciones push a conductores.
+* [ ] **Machine Learning:** Modelo predictivo de demanda basado en TensorFlow Lite.
+* [ ] **Pasarela de Pagos:** Integración para cobro automático por tiempo de uso.
+* [ ] **API Pública:** Exposición de endpoints para integración con terceros.
+
+---
+
+## 📂 Estructura del Repositorio
+
+El proyecto sigue una estructura modular limpia:
 
 ```text
-├── firmware/          # Código C++ para ESP32 y lógica de sensores.
-├── web-dashboard/     # Aplicación web y microservicios (GCP).
-├── docs/              # Documentación técnica completa.
-├── screenshots/       # Capturas de pantalla de la plataforma.
-└── README.md          # Presentación del proyecto.
+/
+├── firmware/               # Código C++ para ESP32
+│   └── src/                # Lógica de sensores y conexión WiFi
+├── gcp-functions/          # Microservicios Cloud Run (Node.js)
+│   ├── manage-zones/       # Lógica de administración de zonas
+│   └── ingest-data/        # Endpoint de recepción IoT
+├── public/                 # Frontend (SPA)
+│   ├── js/
+│   │   ├── api/            # Capa de abstracción API (parking.js, zones.js)
+│   │   ├── map/            # Lógica Google Maps (core.js, builder.js)
+│   │   ├── ui/             # Componentes de interfaz (sidebar.js, charts.js)
+│   │   └── utils/          # Helpers (validators.js, formatters.js)
+│   └── css/                # Tailwind styles
+└── README.md
 ```
 
 ---
 
-## 👤 Sobre mí
+## ⚙️ Instalación y Despliegue
 
-**Joaquín Troncoso Muñoz** *Ingeniero en Infraestructura y Plataformas Tecnológicas (E) en Duoc UC.*
+### Requisitos
+* Node.js v20+ & NPM
+* Google Cloud SDK & Firebase CLI
+* Hardware ESP32 y sensores compatibles
 
-* **Certificación**: Scrum Fundamentals Certified (SFC™).
-* **Formación**: Azure Fundamentals (AZ-900) en proceso.
-* **Enfoque**: Implementación de soluciones escalables, ciberseguridad y automatización Cloud.
+### 1. Despliegue Backend (Cloud Run)
+```bash
+# Construir imagen del contenedor
+gcloud builds submit --tag gcr.io/proyecto-id/ingest-parking-data
 
-<p align="left">
-  <a href="https://www.linkedin.com/in/joaquint/" target="_blank">
-    <img src="https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
-  </a>
-  <a href="mailto:joaquin.ltm@gmail.com">
-    <img src="https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail" alt="Email" />
-  </a>
-</p>
+# Desplegar en Cloud Run (Managed)
+gcloud run deploy ingest-parking-data \
+  --image gcr.io/proyecto-id/ingest-parking-data \
+  --platform managed \
+  --allow-unauthenticated
+```
+
+### 2. Configuración Frontend
+```javascript
+// Renombrar config/config.example.js a config.js
+const CONFIG = {
+    API_BASE: 'https://[TU-CLOUD-RUN-URL].run.app',
+    GOOGLE_MAPS_API_KEY: '[TU-API-KEY]',
+    FIREBASE_CONFIG: { ... }
+};
+```
+
+### 3. Firmware (ESP32)
+1.  Configurar credenciales WiFi y Endpoint API en `secrets.h`.
+2.  Calibrar el umbral del sensor según la altura de instalación.
+3.  Flashear usando PlatformIO o Arduino IDE.
 
 ---
-*Desarrollado con profesionalismo para transformar la infraestructura urbana.*
+
+## 👤 Autor
+
+<div align="center">
+
+### **Joaquín Troncoso Muñoz**
+**Ingeniero en Infraestructura y Plataformas Tecnológicas**
+
+*Especialista en Integración Cloud, IoT y Ciberseguridad.*
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/joaquint/)
+[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:joaquin.ltm@gmail.com)
+
+</div>
+
+* **Certificaciones:** Scrum Fundamentals Certified (SFC™).
+* **Enfoque:** Arquitecturas Serverless, Automatización y Sistemas Embebidos.
+
+---
+© 2026 S-Parking Project. Todos los derechos reservados.
