@@ -1,48 +1,86 @@
-S-Parking 🚗💨
+S-Parking: Ecosistema IoT \& Cloud para Estacionamientos Inteligentes 🚗💨
 
 
 
-Sistema Inteligente de Gestión de Estacionamientos con IoT y Cloud Computing
+<p align="center">
+
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/IoT-ESP32%2520%257C%2520C%2B%2B-blue%3Fstyle%3Dfor-the-badge%26logo%3Despressif" />
+
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Cloud-Google%2520Cloud%2520Platform-orange%3Fstyle%3Dfor-the-badge%26logo%3Dgoogle-cloud" />
+
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Database-Firestore-ffca28%3Fstyle%3Dfor-the-badge%26logo%3Dfirebase" />
+
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Frontend-Vanilla%2520JS%2520%257C%2520Tailwind-38bdf8%3Fstyle%3Dfor-the-badge%26logo%3Dtailwind-css" />
+
+</p>
 
 
 
-S-Parking es una solución integral diseñada para digitalizar la gestión de estacionamientos. El proyecto combina hardware de bajo costo (sensores láser y microcontroladores) con una arquitectura de microservicios en la nube para ofrecer monitoreo en tiempo real, reservas de puestos y análisis de demanda predictivo.
+📌 Visión General
 
 
 
-👨‍💻 Sobre el Desarrollador
+S-Parking es una solución de infraestructura inteligente diseñada para optimizar la gestión de estacionamientos. El sistema integra hardware embebido con microservicios en la nube para proporcionar datos en tiempo real, reducir la fricción en el usuario final y ofrecer analítica de demanda para la toma de decisiones.
 
 
 
-Este proyecto fue diseñado y desarrollado íntegramente por Joaquín Troncoso, Ingeniero en Infraestructura y Plataformas Tecnológicas. Representa la convergencia de mis habilidades en desarrollo Full Stack, administración de servicios Cloud y electrónica aplicada (IoT).
+Proyecto destacado por: Joaquín Troncoso - Ingeniero (E) en Infraestructura y Plataformas Tecnológicas @ Duoc UC.
 
 
 
-🚀 Características Principales
+📸 Demostración Visual
 
 
 
-Monitoreo en Tiempo Real: Visualización dinámica de la ocupación mediante Google Maps API.
+Para una mejor experiencia, he incluido capturas del funcionamiento real del sistema:
 
 
 
-Arquitectura Serverless: Backend escalable utilizando Google Cloud Run y Firestore para una alta disponibilidad con costos optimizados.
+Dashboard en Tiempo Real
 
 
 
-Sincronización Inteligente (Self-Healing): Lógica implementada en el firmware del ESP32 que detecta desincronizaciones entre el estado físico y la base de datos, corrigiéndolas automáticamente.
+Hardware IoT (ESP32)
 
 
 
-Módulo de Analítica: Motor de recomendaciones que analiza métricas como el Coeficiente de Variación y Tiempo Crítico de ocupación para optimizar la gestión comercial.
+Análisis de Demanda
 
 
 
-Sistema de Reservas: Interfaz de usuario para usuarios finales con validación de patentes y timers de expiración.
 
 
 
-Herramientas de Administración: Interfaz para crear zonas y puestos de estacionamiento masivamente (Line Builder) mediante arrastre en el mapa.
+
+
+
+
+
+
+
+
+
+🏗️ Arquitectura del Sistema (Cloud-Native)
+
+
+
+El sistema se apoya en una arquitectura orientada a servicios, garantizando baja latencia y alta integridad de datos:
+
+
+
+Edge Layer (IoT): Nodos basados en ESP32 utilizan sensores VL53L0X (Time-of-Flight) para medir distancias con precisión láser. Implementan una lógica de Self-Healing que sincroniza el estado local con la nube cada 15s.
+
+
+
+Serverless Backend: Microservicios desplegados en Google Cloud Run (Node.js) gestionan la ingesta de datos a través de una API RESTful.
+
+
+
+Real-time Data: Utilización de Cloud Firestore como base de datos NoSQL para reflejar cambios de estado en milisegundos.
+
+
+
+Analytics Layer: Tareas programadas (Cloud Scheduler) capturan snapshots horarios para generar reportes de tendencias y picos de demanda.
 
 
 
@@ -50,121 +88,89 @@ Herramientas de Administración: Interfaz para crear zonas y puestos de estacion
 
 
 
+Infraestructura \& Cloud
+
+
+
+Google Cloud Platform: Cloud Run, Cloud Scheduler, Secret Manager.
+
+
+
+Firebase: Hosting, Firestore, Authentication.
+
+
+
+Redes: Protocolos HTTP/JSON para comunicación IoT-Cloud.
+
+
+
+Hardware (Electrónica)
+
+
+
+Microcontrolador: ESP32 DevKit v1.
+
+
+
+Sensor: Adafruit VL53L0X (Lidar-based).
+
+
+
+Señalización: LEDs RGB WS2812B (Protocolo de señalización visual).
+
+
+
 Frontend
 
 
 
-JavaScript (Vanilla ES6+): Arquitectura modular sin frameworks pesados para maximizar la velocidad.
+Visualización: Google Maps JavaScript API (Capas personalizadas).
 
 
 
-Tailwind CSS: Diseño responsivo y moderno.
+Gráficos: Chart.js para análisis de demanda.
 
 
 
-Google Maps API: Renderizado de capas personalizadas y herramientas de dibujo.
+Estilos: Tailwind CSS (Mobile-First Design).
 
 
 
-Chart.js: Visualización de datos históricos y tendencias.
+🚀 Desafíos Técnicos Resueltos
 
 
 
-Backend \& Cloud
+Sincronización Bidireccional: Resolución de conflictos de estado cuando se pierde la conexión WiFi, priorizando siempre la lectura física del sensor.
 
 
 
-Node.js: Servicios RESTful desplegados en contenedores.
+Optimización de Costos API: Implementación de Page Visibility API en el frontend para pausar el polling de datos cuando el usuario no está viendo la pestaña, reduciendo peticiones innecesarias a GCP.
 
 
 
-Google Cloud Run: Ejecución de funciones y lógica de negocio.
+Escalabilidad: El sistema permite la creación masiva de puestos mediante una herramienta de "Line Builder" desarrollada sobre la API de mapas.
 
 
 
-Firebase Authentication: Gestión segura de identidades.
+👤 Sobre mí
 
 
 
-Cloud Firestore: Base de datos NoSQL para estados en tiempo real.
+Joaquín Troncoso Muñoz Ingeniero en Infraestructura y Plataformas Tecnológicas (E) en Duoc UC.
 
 
 
-Hardware (IoT)
+Certificación: Scrum Fundamentals Certified (SFC™).
 
 
 
-ESP32 DevKit v1: Cerebro del dispositivo con conectividad WiFi.
+Formación: Azure Fundamentals (AZ-900) en proceso.
 
 
 
-VL53L0X (Time-of-Flight): Sensor láser de alta precisión para detectar presencia de vehículos.
+Enfoque: Implementación de soluciones escalables, ciberseguridad y automatización Cloud.
 
 
 
-LEDs RGB WS2812B: Señalización visual de estados (Libre, Ocupado, Reservado).
-
-
-
-📐 Arquitectura del Sistema
-
-
-
-Ingesta: El sensor ESP32 detecta cambios y envía una petición POST cifrada al endpoint en Cloud Run.
-
-
-
-Procesamiento: Cloud Run valida la petición, actualiza Firestore y dispara tareas programadas para snapshots históricos.
-
-
-
-Consumo: El Dashboard Web realiza polling adaptativo (pausándose si la pestaña no está visible) para reducir el consumo de recursos y costos de API.
-
-
-
-🔧 Configuración para Desarrollo
-
-
-
-Requisitos
-
-
-
-Node.js y npm instalados.
-
-
-
-Cuenta en Google Cloud Platform con facturación habilitada (para Cloud Run).
-
-
-
-API Key de Google Maps.
-
-
-
-Instalación
-
-
-
-Clona este repositorio.
-
-
-
-Crea un archivo js/config/config.js basado en js/config/config.example.js y completa tus credenciales.
-
-
-
-Para el hardware, completa el archivo arduino\_secrets.h dentro de la carpeta /firmware.
-
-
-
-📄 Licencia
-
-
-
-Este proyecto es propiedad de Joaquín Troncoso. Todos los derechos reservados. Desarrollado como proyecto final de título en Duoc UC.
-
-
-
-Si deseas contactarme para saber más sobre este proyecto o mi perfil profesional, puedes encontrarme en LinkedIn.
+Desarrollado con profesionalismo para transformar la infraestructura urbana.
 
