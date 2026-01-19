@@ -1,0 +1,21 @@
+Dependencias
+
+node_modules/
+dist/
+build/
+
+SEGURIDAD CRÍTICA: Ignorar archivos con credenciales reales
+
+**/config.js
+**/arduino_secrets.h
+
+Pero NO ignorar los ejemplos
+
+!/config.example.js
+!/arduino_secrets.example.h
+
+Firebase y temporales
+
+.firebase/
+*.log
+.DS_Store

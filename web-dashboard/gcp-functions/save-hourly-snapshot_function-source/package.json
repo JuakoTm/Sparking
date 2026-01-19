@@ -1,0 +1,8 @@
+{
+  "name": "save-hourly-snapshot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/firestore": "^7.0.0"
+  }
+}

@@ -1,0 +1,910 @@
+/* css/styles.css */
+
+html { height: 100%; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f3f4f6;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure the map container is a positioned parent so absolute controls
+   (admin button, toolbar, preview controls) are placed relative to the map. */
+#map { 
+    position: relative; 
+    width: 100%; 
+    height: 100%;
+    display: block;
+}
+
+/* Mobile-first responsive fixes for small screens */
+@media (max-width: 768px) {
+    /* Solo aplicar overflow hidden cuando existe el mapa (dashboard) */
+    body:has(#map) { height: 100vh; width: 100vw; margin: 0; padding: 0; overflow: hidden; }
+    html:has(#map) { height: 100vh; overflow: hidden; }
+    
+    /* Main layout flex container - force full height */
+    main { height: 100%; width: 100%; }
+    #map { height: 100%; width: 100%; }
+    
+    /* Header stays compact on mobile */
+    header { height: 56px; padding: 8px 12px; flex-shrink: 0; }
+    header h1 { font-size: 16px; }
+    header p { font-size: 8px; }
+    
+    /* Sidebar fully overlays on mobile (no side-by-side) */
+    aside { z-index: 30; }
+}
+
+/* Touch-friendly interaction sizes on mobile */
+@media (max-width: 480px) {
+    .btn-icon { width: 44px; height: 44px; }
+    button { min-height: 44px; }
+}
+
+/* Scrollbar invisible pero funcional */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Transiciones suaves */
+.transition-all-300 { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Efecto Glassmorphism */
+.glass {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* PIN DE MAPA PERSONALIZADO (Restaurado) */
+.parking-pin {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    position: relative;
+    transform-origin: center center;
+    will-change: transform, opacity; /* Optimización de rendering */
+}
+
+.parking-pin:hover {
+    transform: scale(1.2) !important; /* !important para override del zoom scale */
+    z-index: 10;
+    opacity: 1 !important; /* Mantener opacidad completa en hover */
+}
+
+/* Colores de Estado */
+.pin-free {
+    background-color: #10b981; /* Verde */
+    box-shadow: 0 0 10px #10b981, 0 4px 6px rgba(0,0,0,0.3); /* Glow */
+}
+.pin-occupied {
+    background-color: #f43f5e; /* Rojo */
+}
+.pin-reserved {
+    background-color: #f59e0b; /* Ambar */
+}
+.pin-unknown {
+    background-color: #94a3b8; /* Gris */
+}
+
+/* Pin de Edición (Azul) */
+.pin-edit {
+    background-color: #3b82f6;
+    box-shadow: 0 0 15px #3b82f6;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* Cursor para modo builder (cruz +) */
+.map-builder-active {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="%233b82f6" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="%233b82f6" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="%233b82f6" stroke-width="2"/></svg>') 16 16, auto !important;
+}
+
+/* Panel del Constructor de Líneas */
+.builder-panel {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 50;
+    border: 1px solid #e2e8f0;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translate(-50%, 20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.builder-input {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    width: 80px;
+}
+
+.builder-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* Preview pin wrapper (pin azul + controles) */
+.preview-pin-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.preview-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.preview-accept, .preview-cancel {
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    border: none;
+    cursor: pointer;
+}
+
+.preview-accept { background: #059669; color: white; }
+.preview-cancel { background: #dc2626; color: white; }
+
+/* Slightly larger hit area for the preview pin */
+.preview-pin-wrapper .parking-pin { width: 28px; height: 28px; border-width: 4px; }
+
+/* Ensure preview controls don't block map interactions too much */
+.preview-pin-wrapper { pointer-events: auto; }
+
+/* Responsive: adaptar barra admin en pantallas pequeñas */
+@media (max-width: 768px) {
+    #admin-toolbar {
+        /* Keep a comfortable margin from screen edges on mobile */
+        left: 32px !important;
+        right: 32px !important;
+        transform: none !important;
+        top: auto !important;
+        bottom: 16px !important;
+        width: auto !important;
+        padding: 8px 12px;
+        border-radius: 12px;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        justify-content: flex-start;
+        box-sizing: border-box;
+    }
+
+/* The admin toolbar is draggable from any non-interactive area when move-mode is enabled. */
+
+/* Make toolbar positionable via inline styles without breaking rounded layout */
+#admin-toolbar {
+    position: absolute;
+}
+
+/* Base visual style for admin toolbar */
+#admin-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* Restored gradient background used previously for better depth */
+    background: linear-gradient(90deg, rgba(17,24,39,0.98), rgba(30,41,59,0.95)) !important;
+    color: #fff;
+    padding: 8px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 14px 40px rgba(2,6,23,0.6), 0 6px 18px rgba(2,6,23,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+    z-index: 9999; /* high to appear above map controls */
+    transition: transform 200ms ease, left 200ms ease, top 200ms ease;
+    pointer-events: auto;
+}
+
+/* Hide admin toolbar when unauthorized - must override display: flex */
+#admin-toolbar.hidden {
+    display: none !important;
+}
+
+/* Card wrapper for better padding/scroll behavior */
+#admin-toolbar .admin-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 220px;
+    max-width: 1100px;
+    color: #fff;
+    background: transparent; /* toolbar gradient visible behind content */
+}
+
+/* Visible, semi-opaque card background so text/icons are readable over the map */
+#admin-toolbar .admin-card {
+    background: rgba(6,10,18,0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Ensure header stays visible and body can scroll if needed */
+#admin-toolbar .admin-toolbar__header { position: sticky; top: 0; z-index: 10000; background: linear-gradient(90deg, rgba(17,24,39,0.98), rgba(30,41,59,0.95)); }
+#admin-toolbar .admin-toolbar__body { max-height: calc(80vh - 80px); overflow-y: auto; padding-bottom: 6px; }
+
+/* Improve readability of header text over map */
+.admin-title { color: #f8fafc; }
+.admin-sub { color: #9fb7d6; }
+
+/* Ensure toggle and icons are visible */
+.btn-icon, #btn-toggle-move { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); }
+.btn-icon i, #btn-toggle-move i { color: #fff; }
+
+/* Header inside the admin toolbar */
+.admin-toolbar__header { padding: 6px 8px; display: flex; align-items: center; gap: 12px; }
+.admin-toolbar__branding { display:flex; align-items:center; gap:10px; }
+.admin-title { letter-spacing: 0.4px; }
+.admin-sub { opacity: 0.9; }
+
+/* Small icon buttons in header */
+.btn-icon { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.04); color: #fff; width: 40px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.btn-icon:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+
+/* Body actions grid */
+.admin-actions { padding: 6px 8px 10px 8px; }
+.admin-actions .admin-btn { width: 100%; justify-content: flex-start; }
+
+/* Compact look for admin labels */
+.admin-btn .btn-label { font-size: 13px; font-weight: 700; margin-left: 8px; }
+
+/* Make the close button visible only when toolbar is anchored-left (kept for potential anchored mode) */
+#admin-toolbar.anchored-left #admin-close-btn { display: inline-flex !important; }
+
+/* Admin action button common style */
+.admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.06);
+    color: white;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: background 160ms ease, transform 120ms ease;
+}
+.admin-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+.admin-btn i { width: 16px; height: 16px; display: inline-flex; justify-content: center; align-items: center; }
+.admin-btn .btn-label { display: inline-block; white-space: nowrap; }
+
+/* Make the small toggle button visually consistent */
+#btn-toggle-move { border: 1px solid rgba(255,255,255,0.06); padding: 8px; }
+
+/* Orientation-aware layout: portrait (tall/narrow) -> vertical stack */
+@media (orientation: portrait) {
+    #admin-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        left: 12px !important;
+        top: 20px !important;
+        transform: none !important;
+        width: min(92vw, 360px) !important;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding: 10px;
+        border-radius: 12px;
+    }
+    .admin-btn { width: 100%; justify-content: flex-start; }
+    /* Place the toggle in the top-right corner for easier reach */
+    #btn-toggle-move { position: absolute; top: 8px; right: 8px; z-index: 70; }
+
+    /* Make the toolbar content scrollable but visually compact */
+    #admin-toolbar { box-shadow: 0 18px 40px rgba(2,6,23,0.6); }
+    .admin-btn { padding: 10px 12px; margin-bottom: 8px; }
+    .admin-btn:last-child { margin-bottom: 0; }
+
+    /* Small screens: hide long labels when needed (keeps layout tidy) */
+    @media (max-width: 360px) {
+        .admin-btn .btn-label { display: none; }
+    }
+}
+
+
+    /* El primer bloque (Modo Admin) se muestra inline y sin borde derecho */
+    #admin-toolbar > div:first-child {
+        border-right: none !important;
+        padding-right: 8px !important;
+        margin-right: 6px;
+    }
+
+    /* Botones y controles no crecen (scroll horizontal) */
+    #admin-toolbar button,
+    #admin-toolbar .flex.items-center.gap-2 {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Reducir tamaños de texto para no ocupar tanto espacio */
+    #admin-toolbar .text-xs { font-size: 11px; }
+}
+
+@media (min-width: 769px) {
+    /* Desktop: mantener diseño original y centrado */
+    #admin-toolbar { top: 20px; bottom: auto; width: auto; padding: 10px 14px; box-sizing: border-box; }
+    /* Desktop / landscape: horizontal and centered */
+    #admin-toolbar {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 12px;
+        align-items: center;
+        max-width: calc(100% - 64px);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Toolbar children can shrink but keep minimum hit area */
+    #admin-toolbar > * {
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    /* Allow button labels to wrap to second line instead of being cut */
+    #admin-toolbar button {
+        white-space: normal;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    /* Stronger centering and margin overrides to avoid toolbar sticking to the right
+       (override utility margin classes that push items right inside the toolbar) */
+    #admin-toolbar {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    /* Remove left-margin utility classes inside toolbar which caused asymmetry */
+    #admin-toolbar .ml-4,
+    #admin-toolbar .ml-2,
+    #admin-toolbar .ml-3 {
+        margin-left: 0 !important;
+        margin-right: 8px !important;
+    }
+
+    /* Ensure the left block (Modo Admin) doesn't force a right shift */
+    #admin-toolbar > div:first-child {
+        margin-right: 8px;
+        padding-right: 8px;
+        border-right: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Make the toolbar inner elements wrap cleanly and not overflow */
+    #admin-toolbar > * { box-sizing: border-box; }
+
+    /* Tweak button sizing for better aesthetic on medium desktop widths */
+    #admin-toolbar button { border-radius: 10px; }
+
+    /* Desktop-specific compact adjustments for admin panel */
+    #admin-toolbar .admin-panel { padding: 6px 10px; gap: 6px; }
+    #admin-toolbar .admin-header { gap: 6px; }
+    #admin-toolbar .admin-brand { gap: 6px; }
+    #admin-toolbar .admin-texts { display: inline-flex; align-items: center; gap: 6px; }
+    #admin-toolbar .admin-texts .admin-title { font-size: 10px; letter-spacing: 0.4px; }
+    #admin-toolbar .admin-texts .admin-sub { font-size: 9px; opacity: 0.9; }
+    #admin-toolbar .switch-track { width: 34px; height: 18px; }
+    #admin-toolbar .switch-thumb { width: 14px; height: 14px; }
+    #admin-toolbar .btn-icon { width: 30px; height: 26px; font-size: 12px; }
+    #admin-toolbar .admin-action { padding: 5px 8px; gap: 6px; font-size: 11px; }
+
+/* Icon-only mode: hide labels, keep icons and tooltips */
+#admin-toolbar.icon-only {
+    gap: 6px;
+}
+#admin-toolbar.icon-only .btn-label,
+#admin-toolbar.icon-only .admin-label,
+#admin-toolbar.icon-only #admin-instructions {
+    display: none !important;
+}
+#admin-toolbar.icon-only button {
+    width: 44px;
+    padding: 8px;
+    display: inline-flex;
+    justify-content: center;
+}
+#admin-toolbar.icon-only button i { font-size: 18px; }
+#admin-toolbar.icon-only .flex.items-center.gap-2 { min-width: 0; }
+}
+
+/* For very large screens, keep the toolbar centered by default but
+   allow it to be anchored to top-left via the `anchored-left` class. */
+@media (min-width: 1400px) {
+    #admin-toolbar {
+        /* keep absolute positioning (relative to map) to avoid touching viewport edges */
+        position: absolute !important;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 24px;
+        bottom: auto;
+        max-width: min(1100px, calc(100% - 240px)); /* large gutters */
+        width: auto !important;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    /* Anchored to top-left inside the map */
+    #admin-toolbar.anchored-left {
+        left: 20px !important;
+        transform: none !important;
+        top: 20px !important;
+        right: auto !important;
+        position: absolute !important;
+        max-width: 1100px;
+    }
+}
+
+    /* When toolbar is visible/anchored-left, show the close button inside it */
+    #admin-toolbar.anchored-left #admin-close-btn { display: flex !important; }
+
+/* ************ NEW: Clean admin-panel styles (override previous rules) ************ */
+/* Core panel wrapper - ensures solid background on all sizes */
+#admin-toolbar { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; }
+#admin-toolbar .admin-panel {
+    background: #0f172a; /* flat, no gradient */
+    color: #fff;
+    border-radius: 12px;
+    padding: 8px 10px;
+    box-shadow: none; /* flat: remove depth */
+    border: 1px solid #1f2937; /* subtle flat border */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 200px;
+    max-width: 800px;
+}
+
+/* Header layout - horizontal y compacto */
+.admin-header { display:flex; align-items:center; gap:8px; }
+.admin-brand { display:flex; align-items:center; gap:6px; }
+.admin-brand i { font-size:16px; color:#fbbf24; }
+.admin-texts { display:flex; align-items:center; gap:4px; }
+.admin-texts .admin-title { font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing: 0.5px; }
+.admin-texts .admin-sub { font-size:10px; color:#9fb7d6; }
+.admin-texts .admin-sub::before { content: "•"; margin-right: 4px; opacity: 0.5; }
+
+.admin-controls { margin-left:auto; display:flex; gap:4px; align-items:center; }
+
+/* Switch styles - más compacto */
+.switch { display:inline-flex; align-items:center; }
+.switch-track { display:inline-block; width:36px; height:18px; background:#334155; border-radius:999px; position:relative; }
+.switch-thumb { display:block; position:absolute; left:2px; top:2px; width:14px; height:14px; background:#fff; border-radius:50%; transition: transform 120ms ease; }
+.switch input:checked + .switch-track { background:#2563eb; }
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(18px); }
+
+/* Icon buttons - más pequeños */
+.btn-icon { width:32px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; font-size: 12px; transition: all 150ms ease; }
+.btn-icon i { color:#fff; }
+.btn-icon:hover { background:rgba(255,255,255,0.08); }
+
+/* Hide admin close button by default */
+#admin-close-btn { display: none !important; }
+#admin-close-btn:not(.hidden) { display: inline-flex !important; }
+
+/* Body actions - más compacto */
+.admin-body { display:flex; gap:4px; flex-wrap:wrap; }
+.admin-action { display:flex; align-items:center; gap:4px; padding:5px 8px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.03); cursor:pointer; color:#fff; font-weight:600; font-size: 11px; }
+.admin-action { background:#1f2937; border-color:#1f2937; box-shadow:none; }
+
+/* Marcador agregado de zona (cluster) */
+.zone-marker {
+    background: #1f2937;
+    color: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 600;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    pointer-events: auto;
+    user-select: none;
+}
+.zone-marker .zone-title { font-weight: 700; letter-spacing: .5px; }
+.zone-marker .zone-counts { font-weight: 500; opacity: .85; }
+.zone-marker .zone-free { color: #10b981; }
+.zone-marker .zone-occupied { color: #f43f5e; }
+
+/* Animación de resaltado para pin seleccionado desde sidebar */
+.pin-highlight {
+    animation: pulse-highlight 1s ease-in-out 3;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.4) !important;
+    transform: scale(1.4) !important;
+    z-index: 9999 !important;
+}
+
+@keyframes pulse-highlight {
+    0%, 100% { transform: scale(1.4); box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+    50% { transform: scale(1.6); box-shadow: 0 0 30px rgba(59, 130, 246, 1), 0 0 50px rgba(59, 130, 246, 0.6); }
+}
+.admin-action i { min-width:14px; font-size: 12px; }
+
+.admin-instructions { color:#9fb7d6; font-weight:600; font-size: 10px; }
+
+/* Footer for move button */
+.admin-footer { 
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 4px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Desktop: botón a la derecha, más compacto */
+@media (min-width: 769px) {
+    /* Desktop layout: compact two-column grid to control spacing
+       Left column: header + actions; Right column: move button */
+    #admin-toolbar .admin-panel {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 0; /* avoid vertical gap when body hidden */
+        padding: 6px 10px;
+    }
+    .admin-header,
+    .admin-body {
+        /* occupy the left column */
+        grid-column: 1 / 2;
+    }
+    /* Desktop: hide body unless it has any visible action to avoid extra space */
+    #admin-toolbar .admin-body { display: none; }
+    #admin-toolbar .admin-body:has(.admin-action:not(.hidden)) { display: flex; }
+    #admin-toolbar .admin-body.hidden { display: none !important; }
+
+    .admin-footer {
+        /* occupy the right column */
+        grid-column: 2 / 3;
+        border-top: none;
+        border-left: 1px solid rgba(255,255,255,0.12);
+        padding-top: 0;
+        padding-left: 10px;
+        margin-top: 0;
+        margin-left: 0;
+        justify-content: center;
+        align-self: center; /* keep footer aligned to header height when body hidden */
+    }
+
+    /* Compact internal gaps on desktop */
+    #admin-toolbar .admin-header { gap: 6px; }
+    #admin-toolbar .admin-body { gap: 6px; }
+    #admin-toolbar .admin-action { gap: 6px; padding: 5px 8px; }
+
+    /* Make the switch and move button align visually */
+    #admin-toolbar .switch-track { width: 34px; height: 18px; }
+    #admin-toolbar .switch-thumb { width: 14px; height: 14px; }
+    #admin-toolbar .btn-icon { width: 30px; height: 26px; }
+}
+
+/* Responsive: small screens (portrait) -> vertical compact panel anchored top-left */
+@media (max-width: 768px) {
+    /* Posicionamiento general */
+    #admin-toolbar { 
+        left: 8px !important; 
+        top: 70px !important; 
+        right: auto !important;
+        transform: none !important;
+        bottom: auto !important;
+        width: auto !important;
+        z-index: 9998;
+        /* Evitar doble fondo: el contenedor no debe tener fondo ni sombra en móvil */
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    /* Deshabilitar gestos de arrastre en móvil */
+    #admin-toolbar { touch-action: auto; }
+    #admin-toolbar .admin-panel { 
+        width: 52px; 
+        min-width: 52px;
+        max-width: 52px;
+        max-height: none;
+        overflow-y: visible; 
+        overflow-x: hidden;
+        padding: 8px 6px 10px 6px;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        border-radius: 12px;
+        /* Flat mobile: solid background, no shadow */
+        background: #0f172a;
+        box-shadow: none;
+        border: 1px solid #1f2937;
+    }
+    .admin-header { 
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        order: 1;
+    }
+    .admin-brand { 
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+    }
+    .admin-brand i { font-size: 14px; }
+    .admin-texts { text-align: center; }
+    .admin-texts .admin-title { display: none; }
+    .admin-texts .admin-sub { display: none; }
+    .admin-controls { 
+        position: static;
+        right: auto;
+        top: auto;
+        gap: 4px;
+        flex-shrink: 0;
+        flex-direction: column;
+        width: 100%;
+        margin-left: 0;
+        padding-bottom: 2px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    /* Ocultar botón de mover en el header en móvil; se muestra en el footer */
+    .admin-controls #btn-toggle-move { display: none !important; }
+    .switch-track { width: 34px; height: 18px; }
+    .switch-thumb { width: 14px; height: 14px; }
+    .switch input:checked + .switch-track .switch-thumb { transform: translateX(16px); }
+    .btn-icon { width: 36px; height: 36px; font-size: 16px; }
+
+    /* Cuerpo acciones */
+    .admin-body { 
+        flex-direction: column; 
+        gap: 6px;
+        width: 100%;
+        order: 2;
+        padding-top: 4px;
+    }
+    .admin-action { 
+        width: 36px;
+        height: 36px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-size: 10px;
+        background: #1f2937; /* flat */
+        border: 1px solid #1f2937;
+        box-shadow: none;
+        border-radius: 10px;
+    }
+    .admin-action:hover { background: #1f2937; filter: brightness(1.05); }
+    .admin-action i { font-size: 16px; min-width: auto; }
+    .admin-action span { display: none; }
+    
+    /* Ocultar botones de gestión cuando admin mode está OFF en móviles */
+    #admin-toolbar:not(.admin-active) .admin-body { display: none !important; }
+    .admin-instructions { display: none; }
+
+    /* Footer móvil: ocultar botón mover (usar long-press) */
+    .admin-footer { 
+        display: none !important;
+    }
+    .admin-footer .btn-icon { 
+        display: none !important;
+    }
+}
+
+/* Very small screens: hide labels and show compact icons */
+@media (max-width: 360px) {
+    .admin-texts .admin-sub { display:none; }
+    .admin-action span { display:none; }
+}
+
+/* End new admin-panel styles */
+
+/* ========================================
+   ZONE ACCORDION STYLES
+   ======================================== */
+
+/* Main accordion container */
+.zone-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Zone sparkline canvas - estilos movidos a inline en sidebar.js */
+
+/* Status circles for spot cards */
+.status-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px currentColor;
+    transition: all 0.2s ease;
+}
+
+.status-free {
+    background: #10b981;
+    color: rgba(16, 185, 129, 0.2);
+}
+
+.status-occupied {
+    background: #ef4444;
+    color: rgba(239, 68, 68, 0.2);
+}
+
+.status-reserved {
+    background: #f59e0b;
+    color: rgba(245, 158, 11, 0.2);
+}
+
+.status-unknown {
+    background: #94a3b8;
+    color: rgba(148, 163, 184, 0.2);
+}
+
+.spot-card:hover .status-circle {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 4px currentColor;
+}
+
+/* Spot card styles (already exists in Tailwind classes, but adding fallback) */
+.spot-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: white;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.spot-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.spot-card.status-free {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.spot-card.status-occupied {
+    border-color: #f43f5e;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+
+.spot-card.status-reserved {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.spot-card.user-reserved {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Flat list mode (search results) */
+.flat-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 8px;
+}
+
+.spot-zone-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 4px;
+    padding-left: 2px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+    .zone-header {
+        padding: 12px 14px;
+    }
+    
+    .zone-name {
+        font-size: 14px;
+    }
+    
+    .zone-counts {
+        gap: 6px;
+    }
+    
+    .zone-count-item {
+        padding: 3px 6px;
+    }
+    
+    .zone-count-label {
+        font-size: 10px;
+    }
+    
+    .zone-count-value {
+        font-size: 12px;
+    }
+    
+    /* zone-sparkline estilos movidos a inline */
+    
+    .zone-spots-container {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .spot-card {
+        padding: 10px 12px;
+    }
+}
+
+/* Very small screens: stack header elements */
+@media (max-width: 480px) {
+    .zone-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .zone-header-left {
+        width: 100%;
+    }
+    
+    .zone-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* zone-sparkline estilos movidos a inline */
+}

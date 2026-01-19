@@ -1,0 +1,7 @@
+**/node_modules/**
+**/.*
+gcp-functions/**
+**/*.ps1
+**/*.md
+.vscode/**
+firebase.json

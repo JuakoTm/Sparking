@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Técnica - S-Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Sidebar sticky */
+        .sidebar-sticky {
+            position: sticky;
+            top: 2rem;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+        
+        /* Custom scrollbar */
+        .sidebar-sticky::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar-sticky::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .sidebar-sticky::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        
+        /* Code blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        .code-block .keyword { color: #c792ea; }
+        .code-block .string { color: #c3e88d; }
+        .code-block .number { color: #f78c6c; }
+        .code-block .comment { color: #546e7a; }
+        
+        /* Table styles */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .tech-table th {
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .tech-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tech-table tr:hover {
+            background: #f9fafb;
+        }
+        
+        /* Active nav item */
+        .nav-active {
+            color: #3b82f6;
+            font-weight: 600;
+            border-left: 3px solid #3b82f6;
+            padding-left: 0.75rem;
+        }
+        
+        /* Section spacing */
+        section {
+            scroll-margin-top: 2rem;
+        }
+        
+        /* Badge styles */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-parking text-3xl text-blue-600"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">S-Parking</h1>
+                    <p class="text-sm text-gray-500">Documentación Técnica</p>
+                </div>
+            </div>
+            <a href="index.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                <i class="fas fa-home mr-2"></i>Inicio
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Sidebar Navigation -->
+            <aside class="lg:w-64 flex-shrink-0">
+                <nav class="sidebar-sticky bg-white rounded-lg shadow-sm p-4">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Contenido</h2>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#resumen" class="block py-2 hover:text-blue-600 transition">1. Resumen Ejecutivo</a></li>
+                        <li><a href="#arquitectura" class="block py-2 hover:text-blue-600 transition">2. Arquitectura del Sistema</a></li>
+                        <li><a href="#funcionalidades" class="block py-2 hover:text-blue-600 transition">3. Funcionalidades</a></li>
+                        <li><a href="#stack" class="block py-2 hover:text-blue-600 transition">4. Stack Tecnológico</a></li>
+                        <li><a href="#api" class="block py-2 hover:text-blue-600 transition">5. API REST</a></li>
+                        <li><a href="#hardware" class="block py-2 hover:text-blue-600 transition">6. Hardware IoT</a></li>
+                        <li><a href="#frontend" class="block py-2 hover:text-blue-600 transition">7. Dashboard Web</a></li>
+                        <li><a href="#seguridad" class="block py-2 hover:text-blue-600 transition">8. Seguridad</a></li>
+                        <li><a href="#despliegue" class="block py-2 hover:text-blue-600 transition">9. Despliegue</a></li>
+                        <li><a href="#performance" class="block py-2 hover:text-blue-600 transition">10. Performance y Optimización</a></li>
+                        <li><a href="#costos" class="block py-2 hover:text-blue-600 transition">11. Costos y Escenarios</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 min-w-0">
+                
+                <!-- Resumen Ejecutivo -->
+                <section id="resumen" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        Resumen Ejecutivo
+                    </h2>
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        <strong>S-Parking</strong> es una plataforma cloud-native de gestión inteligente de estacionamientos que integra hardware IoT, backend serverless y un dashboard web interactivo. El sistema detecta la ocupación de puestos en tiempo real mediante sensores de distancia láser, sincroniza el estado con una base de datos en la nube, y ofrece funcionalidades avanzadas de monitoreo y gestión.
+                    </p>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 mt-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-600 mb-1">100%</div>
+                            <div class="text-sm text-gray-600">Detección automática</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-green-600 mb-1">Real-time</div>
+                            <div class="text-sm text-gray-600">Actualización en vivo</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-purple-600 mb-1">Cloud</div>
+                            <div class="text-sm text-gray-600">Infraestructura escalable</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h3 class="font-bold text-yellow-800 mb-2">
+                            <i class="fas fa-lightbulb mr-2"></i>Caso de uso principal
+                        </h3>
+                        <p class="text-yellow-700 text-sm">
+                            Estacionamientos universitarios, corporativos o públicos que requieren optimizar la ocupación, reducir tiempos de búsqueda y ofrecer una experiencia digital a sus usuarios.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Arquitectura -->
+                <section id="arquitectura" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-sitemap text-blue-600 mr-2"></i>
+                        Arquitectura del Sistema
+                    </h2>
+                    
+                    <div class="code-block mb-6">
+<pre>┌─────────────────────────────────────────┐
+│  <span class="keyword">Hardware IoT</span> (Sensores en puestos)     │
+│  ESP32 + Sensor láser VL53L0X           │
+│  WiFi → HTTP POST/GET                   │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│  <span class="keyword">Backend Cloud</span> (Google Cloud Run)       │
+│  • Detección de ocupación               │
+│  • Sistema de reservas                  │
+│  • Gestión de puestos/zonas             │
+│  • Análisis histórico                   │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│  <span class="keyword">Base de Datos</span> (Cloud Firestore)        │
+│  • Estado de puestos                    │
+│  • Configuración de zonas               │
+│  • Históricos de ocupación              │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│  <span class="keyword">Dashboard Web</span> (Firebase Hosting)       │
+│  • Mapa interactivo (Google Maps)       │
+│  • Gráficos de ocupación (Chart.js)     │
+│  • Panel administrativo                 │
+└─────────────────────────────────────────┘</pre>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 mt-6">Flujo de datos</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li><strong>Detección:</strong> El sensor láser detecta la presencia de un vehículo en el puesto</li>
+                        <li><strong>Envío:</strong> El microcontrolador ESP32 envía el estado actualizado al backend en la nube</li>
+                        <li><strong>Procesamiento:</strong> El backend valida y almacena el cambio de estado en la base de datos</li>
+                        <li><strong>Visualización:</strong> El dashboard web consulta el estado y actualiza el mapa en tiempo real</li>
+                        <li><strong>Auto-corrección:</strong> El sistema detecta y corrige automáticamente desincronizaciones</li>
+                    </ol>
+                </section>
+
+                <!-- Funcionalidades -->
+                <section id="funcionalidades" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-star text-blue-600 mr-2"></i>
+                        Funcionalidades Principales
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Feature 1 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Monitoreo en Tiempo Real</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Visualización en mapa interactivo con marcadores de colores según estado.
+                                    </p>
+                                    <div class="mt-2 flex gap-4 text-sm font-semibold">
+                                        <span class="text-emerald-600">Disponible</span>
+                                        <span class="text-rose-600">Ocupado</span>
+                                        <span class="text-amber-600">Reservado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Sistema de Reservas</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Reserva de puestos con tiempo de expiración configurable. Liberación automática al vencer el plazo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-purple-100 p-3 rounded-lg">
+                                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Análisis Histórico</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Gráficos de ocupación por hora, día y zona. Identificación de patrones y horas pico.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 4 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-yellow-100 p-3 rounded-lg">
+                                    <i class="fas fa-tools text-yellow-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Gestión Administrativa</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Panel de administración para crear/editar puestos, configurar zonas y gestionar el sistema.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 5 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-red-100 p-3 rounded-lg">
+                                    <i class="fas fa-sync-alt text-red-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Auto-corrección (Self-healing)</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Detección y corrección automática de desincronizaciones entre sensores y base de datos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 6 -->
+                        <div class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-indigo-100 p-3 rounded-lg">
+                                    <i class="fas fa-search text-indigo-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">Filtros y Búsqueda</h3>
+                                    <p class="text-sm text-gray-600">
+                                        Búsqueda en tiempo real por ID de puesto. Filtros por estado (libres, ocupados, reservados).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stack Tecnológico -->
+                <section id="stack" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-layer-group text-blue-600 mr-2"></i>
+                        Stack Tecnológico
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Backend -->
+                        <div>
+                            <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-server text-blue-600 mr-2"></i>
+                                Backend
+                            </h3>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Runtime:</strong> Node.js 20</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Hosting:</strong> Google Cloud Run (serverless)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Base de datos:</strong> Cloud Firestore (NoSQL)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>API:</strong> RESTful (JSON)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Frontend -->
+                        <div>
+                            <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-window-maximize text-purple-600 mr-2"></i>
+                                Frontend
+                            </h3>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Lenguaje:</strong> JavaScript ES6+ (Vanilla)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Mapas:</strong> Google Maps JavaScript API</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Gráficos:</strong> Chart.js</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Estilos:</strong> Tailwind CSS</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Hosting:</strong> Firebase Hosting</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Hardware -->
+                        <div>
+                            <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-microchip text-red-600 mr-2"></i>
+                                Hardware IoT
+                            </h3>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Microcontrolador:</strong> ESP32</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Sensor:</strong> VL53L0X (láser ToF)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Indicador:</strong> LED RGB</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span><strong>Conectividad:</strong> WiFi (WPA2)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Cloud Services -->
+                        <div>
+                            <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-cloud text-yellow-600 mr-2"></i>
+                                Servicios Cloud (GCP)
+                            </h3>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span>Cloud Run (9 servicios)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span>Cloud Firestore</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span>Firebase Hosting</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fas fa-check text-green-600"></i>
+                                    <span>Firebase Authentication</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API REST -->
+                <section id="api" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-plug text-blue-600 mr-2"></i>
+                        API REST
+                    </h2>
+                    
+                    <p class="text-gray-700 mb-6">
+                        El sistema expone una API RESTful con endpoints para gestión de puestos, reservas, zonas y análisis histórico. Todos los endpoints aceptan/devuelven JSON.
+                    </p>
+
+                    <div class="overflow-x-auto">
+                        <table class="tech-table">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Método</th>
+                                    <th>Descripción</th>
+                                    <th>Auth</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/get-parking-status</code></td>
+                                    <td><span class="badge badge-green">GET</span></td>
+                                    <td>Obtener estado de todos los puestos</td>
+                                    <td><span class="badge badge-blue">Pública</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/reserve-parking-spot</code></td>
+                                    <td><span class="badge badge-yellow">POST</span></td>
+                                    <td>Crear reserva en puesto disponible</td>
+                                    <td><span class="badge badge-blue">Pública</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/release-parking-spot</code></td>
+                                    <td><span class="badge badge-yellow">POST</span></td>
+                                    <td>Cancelar reserva y liberar puesto</td>
+                                    <td><span class="badge badge-blue">Pública</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/get-zones</code></td>
+                                    <td><span class="badge badge-green">GET</span></td>
+                                    <td>Listar zonas configuradas</td>
+                                    <td><span class="badge badge-blue">Pública</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/get-occupancy-history</code></td>
+                                    <td><span class="badge badge-green">GET</span></td>
+                                    <td>Consultar histórico de ocupación</td>
+                                    <td><span class="badge badge-blue">Pública</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/create-parking-spot</code></td>
+                                    <td><span class="badge badge-yellow">POST</span></td>
+                                    <td>Crear/actualizar puesto (Admin)</td>
+                                    <td><span class="badge badge-yellow">Admin</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/delete-parking-spot</code></td>
+                                    <td><span class="badge badge-red">POST</span></td>
+                                    <td>Eliminar puesto (Admin)</td>
+                                    <td><span class="badge badge-yellow">Admin</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code class="text-xs bg-gray-100 px-2 py-1 rounded">/manage-zones</code></td>
+                                    <td><span class="badge badge-yellow">POST</span></td>
+                                    <td>CRUD de zonas (Admin)</td>
+                                    <td><span class="badge badge-yellow">Admin</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                        <h3 class="font-bold text-blue-800 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Ejemplo de uso
+                        </h3>
+                        <p class="text-blue-700 text-sm mb-3">
+                            Para crear una reserva, envía una petición POST con los siguientes parámetros:
+                        </p>
+                        <div class="code-block text-xs">
+<pre>{
+  <span class="string">"spot_id"</span>: <span class="string">"A-01"</span>,
+  <span class="string">"license_plate"</span>: <span class="string">"ABCD12"</span>,
+  <span class="string">"duration_minutes"</span>: <span class="number">30</span>
+}</pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hardware IoT -->
+                <section id="hardware" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-microchip text-blue-600 mr-2"></i>
+                        Hardware IoT
+                    </h2>
+                    
+                    <p class="text-gray-700 mb-6">
+                        Cada puesto de estacionamiento está equipado con un sistema de detección automática basado en sensores láser de alta precisión.
+                    </p>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <div class="border border-gray-200 rounded-lg p-5 text-center">
+                            <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-microchip text-blue-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-900 mb-2">ESP32</h3>
+                            <p class="text-sm text-gray-600">Microcontrolador con WiFi integrado y procesamiento dual-core</p>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-5 text-center">
+                            <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-sensor text-red-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-900 mb-2">VL53L0X</h3>
+                            <p class="text-sm text-gray-600">Sensor láser ToF con rango de hasta 2 metros y alta precisión</p>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-5 text-center">
+                            <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-lightbulb text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-900 mb-2">LED RGB</h3>
+                            <p class="text-sm text-gray-600">Indicador visual del estado en tiempo real (verde/rojo/ámbar)</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Funcionamiento</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold mt-1">1</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Detección continua</h4>
+                                <p class="text-sm text-gray-600">El sensor láser mide la distancia cada 500ms. Cuando detecta un objeto cercano (vehículo), cambia el estado a "Ocupado".</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold mt-1">2</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Envío inmediato</h4>
+                                <p class="text-sm text-gray-600">Al detectar un cambio de estado, el ESP32 envía la actualización al backend en la nube de forma inmediata vía WiFi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold mt-1">3</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Sincronización periódica</h4>
+                                <p class="text-sm text-gray-600">Cada 15 segundos, el dispositivo consulta el estado en la nube para detectar y corregir posibles desincronizaciones.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold mt-1">4</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Indicación visual</h4>
+                                <p class="text-sm text-gray-600">El LED RGB muestra el estado actual: verde (disponible), rojo (ocupado) o ámbar (reservado).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-green-50 border-l-4 border-green-400 rounded">
+                        <h3 class="font-bold text-green-800 mb-2">
+                            <i class="fas fa-shield-alt mr-2"></i>Auto-corrección (Self-healing)
+                        </h3>
+                        <p class="text-green-700 text-sm">
+                            El sistema implementa lógica de auto-corrección para garantizar consistencia. Si detecta que el estado local (sensor) y el estado en la nube no coinciden, reenvía automáticamente la información correcta. Además, el backend protege las reservas activas ignorando lecturas temporales del sensor mientras se espera la llegada del vehículo reservado.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Dashboard Web -->
+                <section id="frontend" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-window-maximize text-blue-600 mr-2"></i>
+                        Dashboard Web
+                    </h2>
+                    
+                    <p class="text-gray-700 mb-6">
+                        El dashboard proporciona una interfaz intuitiva para monitorear y gestionar todo el sistema de estacionamiento en tiempo real.
+                    </p>
+
+                    <div class="space-y-6">
+                        <!-- Feature 1 -->
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-gray-900 mb-2">
+                                <i class="fas fa-map text-blue-600 mr-2"></i>
+                                Mapa interactivo
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Visualización geográfica de todos los puestos sobre Google Maps. Los marcadores cambian de color según el estado (verde=disponible, rojo=ocupado, ámbar=reservado). Click en cualquier marcador para ver detalles y realizar acciones.
+                            </p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-gray-900 mb-2">
+                                <i class="fas fa-list text-green-600 mr-2"></i>
+                                Lista lateral organizada
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Sidebar con puestos agrupados por zonas en formato accordion. Cada zona muestra contadores (libres/ocupados/reservados) y un mini-gráfico de tendencia de ocupación.
+                            </p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-gray-900 mb-2">
+                                <i class="fas fa-chart-bar text-purple-600 mr-2"></i>
+                                Análisis histórico
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Gráfico lineal interactivo (Chart.js) que muestra la evolución de la ocupación por hora. Selector de fecha para consultar históricos de hasta 30 días. Identificación automática de horas pico y patrones de uso.
+                            </p>
+                        </div>
+
+                        <!-- Feature 4 -->
+                        <div class="border-l-4 border-yellow-500 pl-4">
+                            <h3 class="font-bold text-gray-900 mb-2">
+                                <i class="fas fa-filter text-yellow-600 mr-2"></i>
+                                Filtros y búsqueda
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Filtros rápidos por estado (todos/libres/ocupados/reservados). Buscador en tiempo real por ID de puesto. Los resultados se actualizan instantáneamente sin recargar la página.
+                            </p>
+                        </div>
+
+                        <!-- Feature 5 -->
+                        <div class="border-l-4 border-red-500 pl-4">
+                            <h3 class="font-bold text-gray-900 mb-2">
+                                <i class="fas fa-cog text-red-600 mr-2"></i>
+                                Panel administrativo
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Modo admin con herramientas para crear/editar/eliminar puestos y configurar zonas. Incluye "Smart Ruler" que muestra la distancia al puesto más cercano al crear nuevos puestos.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seguridad -->
+                <section id="seguridad" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
+                        Seguridad
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-user-lock text-blue-600 text-xl"></i>
+                                <h3 class="font-bold text-gray-900">Autenticación</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Sistema de autenticación basado en Firebase Authentication (Email/Password). Solo usuarios autenticados pueden acceder al panel administrativo.
+                            </p>
+                            <span class="badge badge-green">Firebase Auth</span>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-database text-green-600 text-xl"></i>
+                                <h3 class="font-bold text-gray-900">Firestore Security Rules</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">
+                                La base de datos está protegida con reglas de seguridad estrictas. Todo el acceso se realiza a través del backend con Admin SDK, bloqueando acceso directo no autorizado.
+                            </p>
+                            <span class="badge badge-green">Protección total</span>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-key text-purple-600 text-xl"></i>
+                                <h3 class="font-bold text-gray-900">API Keys</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Las API keys (Google Maps, Firebase) están restringidas por dominio HTTP referrer, previniendo uso no autorizado desde otros sitios web.
+                            </p>
+                            <span class="badge badge-yellow">Restricción por dominio</span>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-lock text-red-600 text-xl"></i>
+                                <h3 class="font-bold text-gray-900">HTTPS</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Toda la comunicación (frontend-backend, ESP32-backend) se realiza sobre HTTPS, garantizando encriptación end-to-end.
+                            </p>
+                            <span class="badge badge-green">Cifrado SSL/TLS</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Despliegue -->
+                <section id="despliegue" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-rocket text-blue-600 mr-2"></i>
+                        Despliegue y Escalabilidad
+                    </h2>
+                    
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Infraestructura Cloud</h3>
+                    <p class="text-gray-700 mb-4">
+                        El sistema está desplegado en Google Cloud Platform (GCP) con arquitectura serverless, lo que garantiza alta disponibilidad, escalabilidad automática y costos optimizados según uso real.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-900 mb-2">
+                                <i class="fas fa-server mr-2"></i>Backend (Cloud Run)
+                            </h4>
+                            <ul class="text-sm text-blue-800 space-y-1">
+                                <li>• Auto-escalado (0 a 100+ instancias)</li>
+                                <li>• Deploy sin downtime</li>
+                                <li>• Pago por uso (por milisegundo)</li>
+                                <li>• Region: South America</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-900 mb-2">
+                                <i class="fas fa-globe mr-2"></i>Frontend (Firebase Hosting)
+                            </h4>
+                            <ul class="text-sm text-green-800 space-y-1">
+                                <li>• CDN global</li>
+                                <li>• Certificado SSL automático</li>
+                                <li>• Caché optimizado</li>
+                                <li>• Deploy en segundos</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Escalabilidad</h3>
+                    <p class="text-gray-700 mb-4">
+                        La arquitectura serverless permite escalar desde 10 hasta 10,000+ puestos sin cambios en la infraestructura. El sistema soporta:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
+                        <li>Miles de sensores enviando datos simultáneamente</li>
+                        <li>Múltiples usuarios consultando el dashboard en tiempo real</li>
+                        <li>Históricos de millones de registros sin degradación de rendimiento</li>
+                        <li>Expansión multi-sede (diferentes ubicaciones geográficas)</li>
+                    </ul>
+
+                    <!-- Nota: los costos se detallan en la sección dedicada -->
+                </section>
+
+                <!-- Performance y Optimización -->
+                <section id="performance" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-rocket text-blue-600 mr-2"></i>
+                        Performance y Optimización
+                    </h2>
+
+                    <p class="text-gray-700 mb-6">
+                        El sistema S-Parking está diseñado con una arquitectura eficiente que optimiza el uso de recursos en la nube. La plataforma implementa estrategias inteligentes de caching, polling adaptativo y gestión de recursos para ofrecer alto rendimiento con costos operacionales controlados.
+                    </p>
+
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Estrategias Implementadas</h3>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <!-- Cache en Memoria -->
+                        <div class="border border-blue-200 rounded-lg p-5 bg-blue-50">
+                            <h4 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-database"></i>
+                                Cache en Memoria
+                            </h4>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                <li><strong>Estado de puestos:</strong> 15 segundos TTL</li>
+                                <li><strong>Zonas:</strong> 5 minutos TTL</li>
+                                <li><strong>Historial:</strong> 10 minutos TTL</li>
+                                <li><strong>Beneficio:</strong> Evita requests redundantes</li>
+                            </ul>
+                            <p class="text-xs text-blue-600 mt-3">
+                                Datos se sirven desde memoria local durante el periodo de validez
+                            </p>
+                        </div>
+
+                        <!-- Page Visibility API -->
+                        <div class="border border-green-200 rounded-lg p-5 bg-green-50">
+                            <h4 class="font-bold text-green-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-eye-slash"></i>
+                                Page Visibility API
+                            </h4>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                <li><strong>Detección:</strong> Tab oculto/visible</li>
+                                <li><strong>Acción:</strong> Pausa todos los intervalos</li>
+                                <li><strong>Reactivación:</strong> Fetch inmediato al volver</li>
+                                <li><strong>Beneficio:</strong> Ahorro total en inactividad</li>
+                            </ul>
+                            <p class="text-xs text-green-600 mt-3">
+                                Detiene operaciones cuando el usuario no está visualizando la página
+                            </p>
+                        </div>
+
+                        <!-- Intervalos Optimizados -->
+                        <div class="border border-purple-200 rounded-lg p-5 bg-purple-50">
+                            <h4 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-clock"></i>
+                                Intervalos de Polling
+                            </h4>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                <li><strong>Polling estado:</strong> 20s</li>
+                                <li><strong>Historial:</strong> 10 minutos</li>
+                                <li><strong>Timer UI:</strong> 5s (solo local)</li>
+                                <li><strong>Beneficio:</strong> Balance óptimo entre tiempo real y eficiencia</li>
+                            </ul>
+                            <p class="text-xs text-purple-600 mt-3">
+                                Valores configurables en CONFIG.PERFORMANCE
+                            </p>
+                        </div>
+
+                        <!-- Invalidación Inteligente -->
+                        <div class="border border-amber-200 rounded-lg p-5 bg-amber-50">
+                            <h4 class="font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i>
+                                Invalidación Selectiva
+                            </h4>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                <li><strong>Reservar/Liberar:</strong> Invalida cache estado</li>
+                                <li><strong>CRUD Admin:</strong> Invalida según entidad</li>
+                                <li><strong>Resultado:</strong> Datos frescos garantizados</li>
+                                <li><strong>Beneficio:</strong> Cache eficiente con datos frescos</li>
+                            </ul>
+                            <p class="text-xs text-amber-600 mt-3">
+                                Máximo staleness: 15-20s (aceptable para parking)
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Configuración Adaptable</h3>
+
+                    <div class="bg-slate-800 text-slate-100 p-5 rounded-lg mb-6 overflow-x-auto">
+                        <pre class="text-sm"><code>// js/config/config.js
+CONFIG.PERFORMANCE = {
+    // Intervalos (ms)
+    POLLING_INTERVAL: 20000,        // Estado puestos
+    HISTORY_REFRESH: 10 * 60 * 1000, // Historial
+    TIMER_UPDATE: 5000,              // UI local
+    
+    // Cache TTL (ms)
+    CACHE_PARKING_STATUS: 15000,     // 15s
+    CACHE_ZONES: 5 * 60 * 1000,      // 5 min
+    CACHE_HISTORY: 10 * 60 * 1000,   // 10 min
+    
+    // Debounce
+    DEBOUNCE_SEARCH: 400,            // Búsquedas
+};</code></pre>
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Métricas de Eficiencia</h3>
+
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <div class="text-center p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                            <div class="text-4xl font-bold text-blue-600 mb-2">20s</div>
+                            <div class="text-sm text-gray-700">Intervalo de actualización</div>
+                        </div>
+                        <div class="text-center p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                            <div class="text-4xl font-bold text-green-600 mb-2">15s</div>
+                            <div class="text-sm text-gray-700">Cache TTL estado</div>
+                        </div>
+                        <div class="text-center p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                            <div class="text-4xl font-bold text-purple-600 mb-2">0</div>
+                            <div class="text-sm text-gray-700">Requests en tab oculto</div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-blue-50 border-l-4 border-blue-500 rounded">
+                        <h4 class="font-bold text-blue-900 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Características del Sistema de Optimización
+                        </h4>
+                        <ul class="text-sm text-blue-900 space-y-1.5">
+                            <li>• <strong>Cache automático</strong> que reduce requests innecesarios sin intervención manual</li>
+                            <li>• <strong>Detección de inactividad</strong> que pausa operaciones cuando el usuario no está viendo la página</li>
+                            <li>• <strong>Configuración centralizada</strong> en <code class="bg-blue-100 px-1 rounded text-xs">js/config/config.js</code> para ajustes finos</li>
+                            <li>• <strong>Invalidación inteligente</strong> que garantiza datos frescos tras operaciones críticas</li>
+                            <li>• <strong>Balance óptimo</strong> entre costo operacional y experiencia de usuario</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Costos y Escenarios -->
+                <section id="costos" class="bg-white rounded-lg shadow-sm p-8 mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-dollar-sign text-blue-600 mr-2"></i>
+                        Costos y Escenarios
+                    </h2>
+
+                    <p class="text-gray-700 mb-6">
+                        Estimaciones de costo mensuales basadas en uso típico. Se consideran servicios: Cloud Run (invocaciones/CPU/ram), Firestore (lecturas/escrituras/almacenamiento) y Hosting (mínimo). Valores de referencia; pueden variar por región y promociones.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <!-- Escenario 1: Pruebas / Demo -->
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <h3 class="font-bold text-gray-900 mb-2">Escenario 1: Pruebas / Demo</h3>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Sensores: 1-5</li>
+                                <li>• Requests diarios: ~150-600</li>
+                                <li>• Firestore: lecturas ~2k-8k, escrituras ~1k</li>
+                                <li>• Cloud Run: invocaciones ~600-3k</li>
+                            </ul>
+                            <div class="mt-3 p-3 bg-green-50 rounded">
+                                <span class="text-green-800 text-sm font-semibold">Costo estimado: USD $0.30 - $1.50 / mes</span>
+                                <div class="text-xs text-green-600 mt-1">Sistema optimizado con cache y polling inteligente</div>
+                            </div>
+                        </div>
+
+                        <!-- Escenario 2: Piloto pequeño -->
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <h3 class="font-bold text-gray-900 mb-2">Escenario 2: Piloto (20-50 puestos)</h3>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Sensores: 20-50</li>
+                                <li>• Requests diarios: ~4.5k-12k</li>
+                                <li>• Firestore: lecturas ~45k-120k, escrituras ~20k-50k</li>
+                                <li>• Cloud Run: invocaciones ~4.5k-12k</li>
+                            </ul>
+                            <div class="mt-3 p-3 bg-green-50 rounded">
+                                <span class="text-green-800 text-sm font-semibold">Costo estimado: USD $6 - $18 / mes</span>
+                                <div class="text-xs text-green-600 mt-1">Sistema optimizado con cache y polling inteligente</div>
+                            </div>
+                        </div>
+
+                        <!-- Escenario 3: Operación media -->
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <h3 class="font-bold text-gray-900 mb-2">Escenario 3: Operación media (100-300 puestos)</h3>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Sensores: 100-300</li>
+                                <li>• Requests diarios: ~21k-63k</li>
+                                <li>• Firestore: lecturas ~210k-630k, escrituras ~100k-300k</li>
+                                <li>• Cloud Run: invocaciones ~21k-63k</li>
+                            </ul>
+                            <div class="mt-3 p-3 bg-green-50 rounded">
+                                <span class="text-green-800 text-sm font-semibold">Costo estimado: USD $27 - $75 / mes</span>
+                                <div class="text-xs text-green-600 mt-1">Sistema optimizado con cache y polling inteligente</div>
+                            </div>
+                        </div>
+
+                        <!-- Escenario 4: Operación grande -->
+                        <div class="border border-gray-200 rounded-lg p-5">
+                            <h3 class="font-bold text-gray-900 mb-2">Escenario 4: Operación grande (500-1000 puestos)</h3>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Sensores: 500-1000</li>
+                                <li>• Requests diarios: ~105k-210k</li>
+                                <li>• Firestore: lecturas ~1M-2.1M, escrituras ~500k-1M</li>
+                                <li>• Cloud Run: invocaciones ~105k-210k</li>
+                            </ul>
+                            <div class="mt-3 p-3 bg-green-50 rounded">
+                                <span class="text-green-800 text-sm font-semibold">Costo estimado: USD $105 - $270 / mes</span>
+                                <div class="text-xs text-green-600 mt-1">Sistema optimizado con cache y polling inteligente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Arquitectura del Sistema</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2 mb-6 text-sm">
+                        <li><strong>Polling eficiente:</strong> Dashboard cada 20s con cache de 15s, historial cada 10 min, ESP32 sincroniza cada 15s.</li>
+                        <li><strong>Gestión de inactividad:</strong> Sistema pausa automáticamente cuando tab está oculto (Page Visibility API).</li>
+                        <li><strong>Cache multinivel:</strong> Estado 15s, zonas 5 min, historial 10 min en memoria del navegador.</li>
+                        <li><strong>Firestore:</strong> Lecturas optimizadas por cache; escrituras al cambiar estado o snapshot horario.</li>
+                        <li><strong>Cloud Run:</strong> Arquitectura serverless con CPU y memoria a demanda; invocaciones minimizadas.</li>
+                        <li><strong>Hosting:</strong> CDN global con costo predecible y bajo.</li>
+                    </ul>
+
+                    <div class="p-5 bg-blue-50 border-l-4 border-blue-500 rounded mb-6">
+                        <h3 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                            <i class="fas fa-rocket"></i>
+                            Arquitectura de Alto Rendimiento
+                        </h3>
+                        <p class="text-sm text-blue-800 mb-3">
+                            El sistema S-Parking está diseñado con optimizaciones que reducen costos sin comprometer funcionalidad:
+                        </p>
+                        <ul class="text-sm text-blue-900 space-y-1.5">
+                            <li><strong>• Cache Inteligente:</strong> Memoria del navegador con TTL (15s estado, 5min zonas, 10min historial)</li>
+                            <li><strong>• Page Visibility API:</strong> Pausa polling automáticamente cuando tab está oculto (~80% tiempo típico)</li>
+                            <li><strong>• Intervalos Optimizados:</strong> 20s polling para balance perfecto entre tiempo real y eficiencia</li>
+                            <li><strong>• Invalidación Selectiva:</strong> Cache se limpia automáticamente tras reservas o ediciones admin</li>
+                            <li><strong>• Debounce en Búsquedas:</strong> 400ms para evitar renders excesivos y mejorar UX</li>
+                        </ul>
+                        <p class="text-sm text-blue-700 mt-3 font-semibold">
+                            📊 Resultado: Arquitectura eficiente que optimiza recursos manteniendo excelente experiencia de usuario
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h3 class="font-bold text-yellow-800 mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Nota
+                        </h3>
+                        <p class="text-yellow-700 text-sm">
+                            Estas estimaciones son orientativas para planificación. El costo real depende de cargas pico, reglas de caché, tamaño de payloads y región. Se recomienda configurar alertas de presupuesto y monitoreo de uso en GCP.
+                        </p>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">S-Parking</h3>
+                    <p class="text-gray-400 text-sm">
+                        Plataforma inteligente de gestión de estacionamientos con tecnología IoT y cloud computing.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Enlaces</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="index.html" class="text-gray-400 hover:text-white transition">Inicio</a></li>
+                        <li><a href="dashboard.html" class="text-gray-400 hover:text-white transition">Dashboard</a></li>
+                        <li><a href="docs.html" class="text-blue-400 font-semibold">Documentación</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Tecnología</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="badge badge-blue">Google Cloud</span>
+                        <span class="badge badge-green">Firebase</span>
+                        <span class="badge badge-yellow">IoT</span>
+                        <span class="badge badge-red">Real-time</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 S-Parking. Documentación Técnica</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll with offset for sticky header
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Active nav highlight on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.sidebar-sticky a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('nav-active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('nav-active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

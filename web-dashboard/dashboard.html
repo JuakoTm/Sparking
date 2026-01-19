@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>S-Parking | Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="h-screen w-screen overflow-hidden flex flex-col text-slate-800">
+  <!-- ========== HEADER ========== -->
+  <header class="h-16 glass border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 z-30 shadow-sm shrink-0 bg-white">
+    <div id="site-brand" class="flex items-center gap-3" style="cursor:pointer">
+      <i class="fas fa-parking text-3xl text-blue-600"></i>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-slate-900">S-Parking</h1>
+        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Dashboard en Tiempo Real</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="hidden md:flex flex-col items-end">
+        <span class="text-[10px] font-bold text-slate-400 uppercase">Actualizado</span>
+        <span id="last-updated-time" class="text-xs font-medium text-slate-700 font-mono">--:--</span>
+      </div>
+
+      <!-- Contenedor de Auth (gestionado por JS) -->
+      <div id="auth-header-container">
+        <!-- Botón Login (visible si NO hay usuario) -->
+        <button id="btn-login-nav" class="hidden px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">
+          Iniciar Sesión
+        </button>
+
+        <!-- Menú Usuario (visible si HAY usuario) -->
+        <div id="user-menu-nav" class="hidden flex items-center gap-3 relative">
+          <!-- Avatar clickable -->
+          <button id="user-avatar" class="relative w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 border border-slate-300 hover:ring-2 hover:ring-slate-300 transition">
+            <i class="fa-solid fa-user text-sm"></i>
+          </button>
+          <!-- Username popover (hidden by default) -->
+          <div id="user-popover" class="hidden absolute z-50 left-1/2 -translate-x-1/2 top-full mt-2 bg-white border border-slate-200 rounded-lg shadow-md px-2 py-1 min-w-[110px]">
+            <div class="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-6 border-l-transparent border-r-6 border-r-transparent border-b-6 border-b-slate-200"></div>
+            <div class="absolute left-1/2 -translate-x-1/2 -top-[6px] w-0 h-0 border-l-5 border-l-transparent border-r-5 border-r-transparent border-b-5 border-b-white"></div>
+            <span id="user-name" class="text-[11px] font-medium text-slate-700"></span>
+          </div>
+          <button id="btn-logout" class="text-xs text-slate-400 hover:text-rose-600 font-medium">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+        
+
+  <!-- ========== LAYOUT PRINCIPAL ========== -->
+  <div class="flex flex-1 overflow-hidden relative">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside id="sidebar"
+      class="absolute md:relative z-20 w-full md:w-[360px] h-full bg-white border-r border-slate-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl md:shadow-none">
+
+      <!-- Botón Cerrar Móvil -->
+      <div class="md:hidden p-4 border-b flex justify-between items-center bg-slate-50">
+        <h2 class="font-bold text-slate-700">Lista de Puestos</h2>
+        <button id="btn-close-sidebar"
+          class="w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-slate-500">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Sección Estadísticas -->
+      <div class="p-5 border-b border-slate-100 bg-white space-y-4">
+        <!-- Header con Refrescar -->
+        <div class="flex justify-between items-end">
+          <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Estadísticas en Tiempo Real</h2>
+          <span id="btn-refresh" class="text-xs text-blue-600 font-medium cursor-pointer hover:underline">
+            <i class="fa-solid fa-rotate-right mr-1 transition-transform"></i>Refrescar
+          </span>
+        </div>
+
+        <!-- Contadores -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="flex flex-col items-center justify-center px-3 py-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
+            <span class="text-xl font-black text-emerald-600" id="count-free">0</span>
+            <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider mt-0.5">Libres</span>
+          </div>
+          <div class="flex flex-col items-center justify-center px-3 py-2.5 bg-rose-50 rounded-xl border border-rose-100">
+            <span class="text-xl font-black text-rose-600" id="count-occupied">0</span>
+            <span class="text-[9px] font-bold text-rose-800 uppercase tracking-wider mt-0.5">Ocupados</span>
+          </div>
+          <div class="flex flex-col items-center justify-center px-3 py-2.5 bg-amber-50 rounded-xl border border-amber-100">
+            <span class="text-xl font-black text-amber-600" id="count-reserved">0</span>
+            <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider mt-0.5">Reservas</span>
+          </div>
+        </div>
+
+        <!-- Card de Ocupación Actual -->
+        <div id="chart-card" class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ocupación Actual</p>
+              <div class="flex items-end gap-3">
+                <p class="text-4xl font-black text-slate-800 leading-none" id="occupancy-percentage">--</p>
+                <div class="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full mb-1">
+                  <i class="fa-solid fa-arrow-up text-[10px] text-green-600"></i>
+                  <span class="text-[10px] font-bold text-green-700" id="occupancy-trend">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-slate-400 hover:text-blue-600 transition-colors">
+              <i class="fa-solid fa-expand text-lg"></i>
+            </div>
+          </div>
+          
+          <!-- Mini Sparkline -->
+          <div class="h-[60px] mt-2 relative">
+            <canvas id="hourly-chart" style="display: block; box-sizing: border-box; height: 60px; width: 100%;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Búsqueda y Filtros -->
+      <div class="px-6 py-4 bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div class="relative mb-3">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <i class="fa-solid fa-magnifying-glass text-slate-300"></i>
+          </div>
+          <input type="text" id="search-input"
+            class="block w-full rounded-xl border-0 py-2 pl-10 text-slate-900 bg-slate-50 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 transition-all"
+            placeholder="Buscar puesto (ej. A01)...">
+        </div>
+
+        <!-- Filtros Chips -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button data-filter="all"
+            class="filter-chip px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all bg-blue-600 text-white border-blue-600">
+            Todos
+          </button>
+          <button data-filter="free"
+            class="filter-chip px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-slate-200 text-slate-500 bg-white hover:border-emerald-200 hover:text-emerald-600 hover:bg-emerald-50 transition-all">
+            Libres
+          </button>
+          <button data-filter="occupied"
+            class="filter-chip px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-slate-200 text-slate-500 bg-white hover:border-rose-200 hover:text-rose-600 hover:bg-rose-50 transition-all">
+            Ocupados
+          </button>
+          <button data-filter="reserved"
+            class="filter-chip px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-slate-200 text-slate-500 bg-white hover:border-amber-200 hover:text-amber-600 hover:bg-amber-50 transition-all">
+            Reservas
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Puestos (generada por JS) -->
+      <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-slate-50" id="parking-list">
+        <div class="animate-pulse space-y-3">
+          <div class="h-20 bg-slate-200 rounded-xl"></div>
+          <div class="h-20 bg-slate-200 rounded-xl"></div>
+          <div class="h-20 bg-slate-200 rounded-xl"></div>
+        </div>
+      </div>
+
+      <!-- Footer Sidebar -->
+      <div class="p-4 border-t border-slate-200 bg-white text-center">
+        <p class="text-[10px] text-slate-400">S-Parking System®</p>
+      </div>
+    </aside>
+
+    <!-- ========== MAPA PRINCIPAL ========== -->
+    <main class="flex-1 relative w-full h-full bg-slate-200">
+      <div id="map" class="w-full h-full outline-none"></div>
+
+      <!-- Barra Admin (Solo visible si es admin) - RE-IMAGINED -->
+        <div id="admin-toolbar" class="hidden" aria-hidden="true">
+          <div class="admin-panel">
+            <div class="admin-header">
+              <div class="admin-brand">
+                <i class="fa-solid fa-user-shield"></i>
+                <div class="admin-texts">
+                  <div class="admin-title">MODO ADMIN</div>
+                  <div class="admin-sub">Edición</div>
+                </div>
+              </div>
+
+              <div class="admin-controls">
+                <label class="switch">
+                  <input id="admin-toggle" type="checkbox" class="sr-only">
+                  <span class="switch-track"><span class="switch-thumb"></span></span>
+                </label>
+
+                <button id="admin-close-btn" class="btn-icon hidden" title="Cerrar">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="admin-body">
+              <button id="btn-manage-zones" class="admin-action hidden">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Gestionar Zonas</span>
+              </button>
+
+              <button id="btn-line-mode" class="admin-action hidden">
+                <i class="fa-solid fa-arrows-left-right"></i>
+                <span>Crear en Fila</span>
+              </button>
+
+              <div id="admin-instructions" class="admin-instructions hidden">
+                <i class="fa-solid fa-arrow-pointer"></i> Haz clic en el mapa para agregar
+              </div>
+            </div>
+
+            <div class="admin-footer">
+              <button id="btn-toggle-move" class="btn-icon" title="Mover menú">
+                <i class="fa-solid fa-arrows-up-down-left-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      <!-- Botón Hamburguesa Móvil -->
+      <button id="btn-open-sidebar"
+        class="md:hidden absolute top-4 left-4 z-10 bg-white text-slate-700 p-3 rounded-xl shadow-lg shadow-slate-400/20 active:scale-95 transition-transform">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+
+      <!-- Leyenda de Colores -->
+      <div
+        class="absolute bottom-8 left-1/2 transform -translate-x-1/2 sm:translate-x-0 sm:left-6 sm:bottom-8 glass px-4 py-3 rounded-full shadow-xl border border-white/50 flex items-center gap-4 z-10 pointer-events-none sm:pointer-events-auto">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+          <span class="text-[10px] font-bold text-slate-600 uppercase">Libre</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
+          <span class="text-[10px] font-bold text-slate-600 uppercase">Ocupado</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
+          <span class="text-[10px] font-bold text-slate-600 uppercase">Reserva</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========== MODALES ========== -->
+
+  <!-- Modal: Detalle de Puesto -->
+  <div id="spot-detail-modal" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300"
+    aria-labelledby="modal-title" role="dialog" aria-modal="true">
+
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="relative z-10 w-full h-full flex items-end sm:items-center justify-center p-4 pointer-events-none">
+
+      <div
+        class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto border border-white/20">
+
+        <!-- Header del Modal -->
+        <div class="relative bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-start">
+          <div>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Puesto Seleccionado</h3>
+            <div class="flex items-center gap-3 mt-1">
+              <span id="modal-spot-id" class="text-3xl font-black text-slate-800">--</span>
+              <span id="modal-spot-status-badge"
+                class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-600">
+                Cargando...
+              </span>
+            </div>
+          </div>
+          <button id="btn-close-spot-modal"
+            class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-6 space-y-6">
+
+          <!-- Navegación -->
+          <div>
+            <p class="text-xs font-semibold text-slate-400 mb-3 uppercase">Navegación / Ruta</p>
+            <div class="grid grid-cols-2 gap-3">
+              <a id="btn-waze" href="#" target="_blank"
+                class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all group">
+                <i class="fa-brands fa-waze text-2xl mb-2 text-slate-600 group-hover:text-blue-500"></i>
+                <span class="text-xs font-bold">Waze</span>
+              </a>
+              <a id="btn-gmaps" href="#" target="_blank"
+                class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all group">
+                <i class="fa-solid fa-map-location-dot text-2xl mb-2 text-slate-600 group-hover:text-green-500"></i>
+                <span class="text-xs font-bold">Google Maps</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="bg-blue-50/50 rounded-xl p-4 text-sm text-slate-600 border border-blue-100">
+            <i class="fa-solid fa-circle-info text-blue-500 mr-2"></i>
+            <span id="modal-spot-desc">Sin descripción disponible.</span>
+          </div>
+
+          <!-- Mensaje de Estado (Ocupado/Reservado) -->
+          <div id="modal-status-msg" class="hidden bg-amber-50 rounded-xl p-4 text-sm text-amber-800 border border-amber-200 font-medium">
+            Este puesto no está disponible.
+          </div>
+        </div>
+
+        <!-- Formulario de Reserva (Solo si está LIBRE) -->
+        <div id="reservation-form-container" class="hidden px-6 pb-2 space-y-4">
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tu Patente</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-solid fa-car text-slate-400"></i>
+              </div>
+              <input type="text" id="license-plate" placeholder="AB-CD-12" maxlength="8"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-mono font-bold uppercase text-slate-700 transition-all placeholder:font-sans placeholder:font-normal">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tiempo para llegar</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-regular fa-hourglass text-slate-400"></i>
+              </div>
+              <select id="duration-select"
+                class="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-bold text-slate-700 bg-white appearance-none transition-all cursor-pointer">
+                <option value="15">15 Minutos</option>
+                <option value="30" selected>30 Minutos</option>
+                <option value="60">1 Hora</option>
+                <option value="120">2 Horas</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1 ml-1">* La reserva se cancelará si no llegas en este tiempo.</p>
+            <p class="text-[10px] text-slate-400 mt-1 ml-1">* Puede tardar hasta 15 segundos en reflejar estado.</p>
+          </div>
+
+          <button id="btn-confirm-reserve"
+            class="w-full py-4 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700">
+            <i class="fa-solid fa-check-circle"></i>
+            <span>Confirmar Reserva</span>
+          </button>
+        </div>
+
+        <!-- Botón Eliminar (Solo Admin) -->
+        <div class="px-6 pb-6">
+          <button id="btn-delete-spot"
+            class="hidden w-full py-3 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash"></i>
+            <span>Eliminar Puesto</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmación Genérica -->
+  <div id="custom-confirm-modal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-300">
+      <div class="flex flex-col items-center text-center gap-4">
+        <div class="w-12 h-12 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 id="confirm-title" class="text-lg font-bold text-slate-800">¿Estás seguro?</h3>
+        <p id="confirm-message" class="text-sm text-slate-500">Esta acción no se puede deshacer.</p>
+
+        <div class="flex gap-3 w-full mt-2">
+          <button id="btn-confirm-cancel"
+            class="flex-1 py-2.5 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+            Cancelar
+          </button>
+          <button id="btn-confirm-yes"
+            class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container (Para notificaciones flotantes) -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-2"></div>
+
+  <!-- ========== MODAL: CREAR EN FILA ========== -->
+  <div id="modal-line-builder" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="relative z-10 w-full h-full flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto border border-white/20">
+        <!-- Header -->
+        <div class="relative bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-start">
+          <div>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Crear Puestos en Fila</h3>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-2xl font-black text-slate-800">Línea</span>
+            </div>
+          </div>
+          <button id="btn-close-line-modal" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-6 space-y-5">
+          <!-- Selector de Modo: Cantidad vs Distancia -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Modo de Creación</label>
+            <div class="flex gap-2">
+              <button id="builder-mode-quantity" class="flex-1 py-2 rounded-lg font-bold text-sm transition-all bg-blue-600 text-white border-2 border-blue-600">
+                <i class="fa-solid fa-list-ol mr-1"></i>Por Cantidad
+              </button>
+              <button id="builder-mode-distance" class="flex-1 py-2 rounded-lg font-bold text-sm transition-all bg-white text-slate-600 border-2 border-slate-200 hover:border-blue-300">
+                <i class="fa-solid fa-ruler mr-1"></i>Por Distancia
+              </button>
+            </div>
+          </div>
+
+          <!-- Sección: Cantidad de Puestos -->
+          <div id="builder-section-quantity" class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Cantidad de Puestos</label>
+              <input type="number" id="builder-count" min="2" value="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-bold text-slate-700 transition-all">
+            </div>
+          </div>
+
+          <!-- Sección: Distancia entre Puestos (oculta por defecto) -->
+          <div id="builder-section-distance" class="space-y-3 hidden">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Distancia entre Puestos (metros)</label>
+              <input type="number" id="builder-distance" min="1" value="5" step="0.5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-bold text-slate-700 transition-all">
+              <p class="text-[10px] text-slate-400 mt-1 ml-1">Distancia aproximada entre el centro de cada puesto</p>
+            </div>
+          </div>
+
+          <!-- Prefijo -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Prefijo (ej: A-, B-)</label>
+            <input type="text" id="builder-prefix" placeholder="A-" maxlength="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-bold text-slate-700 transition-all uppercase">
+          </div>
+
+          <!-- Número Inicial -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Número Inicial</label>
+            <input type="number" id="builder-start-num" min="1" value="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-bold text-slate-700 transition-all">
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="px-6 pb-6 space-y-3">
+          <button id="btn-confirm-builder" class="w-full py-4 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700">
+            <i class="fa-solid fa-check-circle"></i>
+            <span>Crear Puestos</span>
+          </button>
+          <button id="btn-cancel-builder" class="w-full py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: GESTIONAR ZONAS ========== -->
+  <div id="modal-zones" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="relative z-10 w-full h-full flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div class="bg-white w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto border border-white/20 max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="relative bg-slate-50 p-4 sm:p-6 border-b border-slate-100 flex justify-between items-start shrink-0">
+          <div>
+            <h3 class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Gestionar Estacionamientos</h3>
+            <div class="flex items-center gap-2 sm:gap-3 mt-1">
+              <span class="text-xl sm:text-2xl font-black text-slate-800">Zonas</span>
+            </div>
+          </div>
+          <button id="btn-close-zones-modal" class="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 active:bg-slate-400 flex items-center justify-center transition-colors shrink-0">
+            <i class="fa-solid fa-times text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Contenido (Scroll) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          <div id="zones-content" class="space-y-6">
+            <p class="text-slate-400 text-center italic">Cargando zonas...</p>
+          </div>
+        </div>
+
+        <!-- Footer: Crear Nueva Zona -->
+        <div class="border-t border-slate-100 bg-slate-50 p-3 sm:p-6 shrink-0">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="new-zone-name" placeholder="Nombre de nueva zona" class="flex-1 bg-white border border-slate-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm font-medium">
+            <button id="btn-create-zone" class="bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap">
+              <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Crear Zona</span><span class="sm:hidden">Crear</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: GRÁFICO EXPANDIDO ========== -->
+  <div id="modal-chart-expanded" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/95 backdrop-blur-md transition-opacity"></div>
+    <div class="relative z-10 w-full h-full flex flex-col p-4 sm:p-6 pointer-events-none">
+      <div class="bg-white w-full h-full rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto flex flex-col">
+        <!-- Header -->
+        <div class="relative bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex justify-between items-start shrink-0">
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-blue-100 uppercase tracking-wider mb-1">Análisis de Ocupación</h3>
+            <p class="text-2xl font-black text-white mb-3" id="chart-modal-title">Últimas 24 horas</p>
+            
+            <!-- Selector de fecha -->
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+                <i class="fa-solid fa-calendar text-blue-200 text-sm"></i>
+                <input type="date" id="chart-date-selector" class="bg-transparent text-white text-sm font-semibold outline-none border-none cursor-pointer" />
+              </div>
+              <button id="btn-chart-today" class="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-xs font-bold transition-colors">
+                Hoy
+              </button>
+              <button id="btn-chart-yesterday" class="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-xs font-bold transition-colors">
+                Ayer
+              </button>
+            </div>
+          </div>
+          <button id="btn-close-chart-modal" class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-times text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div class="flex items-center gap-1.5 mb-2">
+                <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">Ocupación Actual</p>
+              </div>
+              <p class="text-3xl font-black text-blue-800" id="chart-modal-current">--</p>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
+              <div class="flex items-center gap-1.5 mb-2">
+                <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Promedio</p>
+              </div>
+              <p class="text-3xl font-black text-emerald-800" id="chart-modal-avg">--</p>
+            </div>
+            <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-4 border border-rose-200">
+              <div class="flex items-center gap-1.5 mb-2">
+                <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Pico Máximo</p>
+              </div>
+              <p class="text-3xl font-black text-rose-800" id="chart-modal-max">--</p>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+              <div class="flex items-center gap-1.5 mb-2">
+                <p class="text-xs font-bold text-amber-600 uppercase tracking-wider">Mínimo</p>
+              </div>
+              <p class="text-3xl font-black text-amber-800" id="chart-modal-min">--</p>
+            </div>
+          </div>
+
+          <!-- Gráfico Principal -->
+          <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 mb-6 border border-slate-200">
+            <div class="h-[400px]">
+              <canvas id="expanded-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Información Adicional -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl p-5 border border-slate-200">
+              <div class="flex items-center gap-2 mb-3">
+                <h4 class="text-sm font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-clock text-blue-600"></i>
+                  Horarios Pico
+                </h4>
+              </div>
+              <div id="chart-modal-peak-hours" class="space-y-2 text-sm text-slate-600">
+                <p>Cargando...</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-5 border border-slate-200">
+              <div class="flex items-center gap-2 mb-3">
+                <h4 class="text-sm font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                  Análisis de Demanda
+                </h4>
+                <button class="info-btn w-4 h-4 rounded-full bg-slate-600 text-white flex items-center justify-center hover:bg-slate-700 transition-colors shrink-0" data-info="&lt;div class=&quot;font-semibold mb-1&quot;&gt;Análisis de Demanda&lt;/div&gt;&lt;ul class=&quot;list-disc pl-4 space-y-1&quot;&gt;&lt;li&gt;&lt;strong&gt;Ocupación promedio:&lt;/strong&gt; nivel general del período.&lt;/li&gt;&lt;li&gt;&lt;strong&gt;Variabilidad (CV):&lt;/strong&gt; dispersión respecto al promedio.&lt;/li&gt;&lt;li&gt;&lt;strong&gt;Tiempo crítico:&lt;/strong&gt; % del período sobre el umbral de saturación.&lt;/li&gt;&lt;li&gt;&lt;strong&gt;Rango:&lt;/strong&gt; mínimo – máximo del período.&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;mt-2 text-[11px] text-slate-300&quot;&gt;Útil para dimensionar capacidad, detectar horas complejas y decidir acciones (reservas, rotación, tarifas).&lt;/div&gt;">
+                  <i class="fa-solid fa-info text-[8px]"></i>
+                </button>
+              </div>
+              <div id="chart-modal-trends" class="space-y-2 text-sm text-slate-600">
+                <p>Cargando...</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-5 border border-slate-200">
+              <div class="flex items-center gap-2 mb-3">
+                <h4 class="text-sm font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-lightbulb text-amber-600"></i>
+                  Recomendaciones
+                </h4>
+              </div>
+              <div id="chart-modal-recommendations" class="space-y-2 text-sm text-slate-600">
+                <p>Cargando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: EDITAR PUESTO (ADMIN) ========== -->
+  <div id="modal-edit-spot-admin" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="relative z-10 w-full h-full flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto border border-white/20">
+        <!-- Header -->
+        <div class="relative bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-start">
+          <div>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Editar Puesto</h3>
+            <p id="modal-admin-spot-id" class="text-2xl font-black text-slate-800 mt-1">A01</p>
+          </div>
+          <button id="btn-close-admin-spot-modal" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-6 space-y-4">
+          <!-- ID -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">ID del Puesto</label>
+            <input type="text" id="admin-spot-id-input" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-mono font-bold" placeholder="A01">
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Descripción</label>
+            <input type="text" id="admin-spot-desc-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm" placeholder="Ej: Puesto cercano a entrada">
+          </div>
+
+          <!-- Zona -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Zona</label>
+            <select id="admin-spot-zone-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm">
+              <option value="">Sin asignar</option>
+            </select>
+          </div>
+
+          <!-- Latitud y Longitud -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Latitud</label>
+              <input type="number" id="admin-spot-lat-input" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm font-mono" step="0.00001" placeholder="-33.433">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Longitud</label>
+              <input type="number" id="admin-spot-lng-input" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm font-mono" step="0.00001" placeholder="-70.615">
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Estado</label>
+            <select id="admin-spot-status-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm">
+              <option value="1">Libre</option>
+              <option value="0">Ocupado</option>
+              <option value="2">Reservado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="px-6 pb-6 space-y-3">
+          <button id="btn-save-admin-spot" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-save"></i> Guardar Cambios
+          </button>
+          <button id="btn-delete-admin-spot" class="w-full bg-rose-600 text-white py-3 rounded-lg font-bold hover:bg-rose-700 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash"></i> Eliminar Puesto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: EDITAR ZONA ========== -->
+  <div id="modal-edit-zone" class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="relative z-10 w-full h-full flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 pointer-events-auto border border-white/20">
+        <!-- Header -->
+        <div class="relative bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-start">
+          <div>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Editar Zona</h3>
+            <p id="modal-edit-zone-id" class="text-2xl font-black text-slate-800 mt-1">Zona 1</p>
+          </div>
+          <button id="btn-close-edit-zone-modal" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-6 space-y-4">
+          <!-- Nombre de Zona -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Nombre de Zona</label>
+            <input type="text" id="edit-zone-name-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm" placeholder="Ej: Zona Norte">
+          </div>
+
+          <!-- Orden de Zona -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Orden (Número)</label>
+            <input type="number" id="edit-zone-order-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm" placeholder="1" min="1">
+          </div>
+
+          <!-- Descripción (opcional) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Descripción (Opcional)</label>
+            <textarea id="edit-zone-desc-input" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm resize-none" rows="3" placeholder="Describen ubicación, características, etc..."></textarea>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="px-6 pb-6 space-y-3">
+          <button id="btn-save-edit-zone" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-save"></i> Guardar Cambios
+          </button>
+          <button id="btn-delete-edit-zone" class="w-full bg-rose-600 text-white py-3 rounded-lg font-bold hover:bg-rose-700 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash"></i> Eliminar Zona
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script type="module" src="js/pages/dashboard.js"></script>
+
+</body>
+
+</html>
