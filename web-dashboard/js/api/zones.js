@@ -5,6 +5,7 @@ import { logger } from '../utils/logger.js';
 // ===== LOCALSTORAGE KEYS =====
 const STORAGE_KEY_ZONES = 'sparking_zones_local';
 const STORAGE_KEY_ZONES_SYNC = 'sparking_zones_synced_at';
+const SIMPLE_POST_HEADERS = { 'Content-Type': 'text/plain;charset=UTF-8' };
 
 // Cache en memoria para reducir llamadas
 let cachedZones = null;
@@ -83,7 +84,7 @@ export async function manageZone(action, zoneData) {
         
         const response = await fetch(CONFIG.MANAGE_ZONES_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify({ action, ...zoneData })
         });
         

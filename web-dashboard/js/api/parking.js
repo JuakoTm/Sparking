@@ -4,6 +4,7 @@ import { logger } from '../utils/logger.js';
 
 const STORAGE_KEY_SPOTS = 'sparking_spots_local';
 const STORAGE_KEY_SPOTS_SYNC = 'sparking_spots_synced_at';
+const SIMPLE_POST_HEADERS = { 'Content-Type': 'text/plain;charset=UTF-8' };
 
 // Cache en memoria para reducir llamadas a API
 let cachedStatus = null;
@@ -76,7 +77,7 @@ export async function createSpot(data) {
         logger.debug('🏗️ Creando puesto:', data);
         const response = await fetch(CONFIG.CREATE_SPOT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify(data)
         });
         const result = await response.json();
@@ -130,7 +131,7 @@ export async function updateSpot(spotId, data) {
         const updateUrl = CONFIG.UPDATE_SPOT_URL || CONFIG.CREATE_SPOT_URL;
         const response = await fetch(updateUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify({ id: spotId, ...data })
         });
         // Intentar leer cuerpo JSON (si lo hay)
@@ -192,7 +193,7 @@ export async function deleteSpot(id) {
         logger.debug('🗑️ Eliminando puesto:', id);
         await fetch(CONFIG.DELETE_SPOT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify({ id })
         });
         logger.debug('✅ Puesto eliminado');
@@ -239,7 +240,7 @@ export async function reserveSpot(spotId, licensePlate, durationMinutes) {
         invalidateParkingCache();
         const response = await fetch(CONFIG.RESERVATION_API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify({ 
                 spot_id: spotId, 
                 license_plate: licensePlate, 
@@ -248,8 +249,19 @@ export async function reserveSpot(spotId, licensePlate, durationMinutes) {
         });
 
         if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.message || 'Error al reservar');
+            let errMessage = 'Error al reservar';
+            try {
+                const errData = await response.json();
+                errMessage = errData?.error || errData?.message || errMessage;
+            } catch (e) {
+                try {
+                    const errText = await response.text();
+                    if (errText) errMessage = errText;
+                } catch (_ignored) {
+                    // sin cuerpo util
+                }
+            }
+            throw new Error(errMessage);
         }
         
         return await response.json();
@@ -267,7 +279,7 @@ export async function releaseSpot(spotId) {
         invalidateParkingCache();
         const response = await fetch(CONFIG.RELEASE_API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SIMPLE_POST_HEADERS,
             body: JSON.stringify({ spot_id: spotId })
         });
         

@@ -1,7 +1,7 @@
 // js/api/history.js
 import { CONFIG } from '../config/config.js';
 
-const HISTORY_API_URL = 'https://southamerica-west1-s-parking-476007.cloudfunctions.net/get-occupancy-history';
+const HISTORY_API_URL = CONFIG.GET_HISTORY_URL;
 
 // Cache en memoria
 let cachedHistory = null;

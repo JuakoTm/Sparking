@@ -10,62 +10,198 @@ export const mapState = {
     infoWindow: null
 };
 
-/**
- * Carga la API de Google Maps de forma robusta
- */
-export function loadGoogleMapsAPI() {
+function toLatLng(input) {
+    if (!input) return { lat: 0, lng: 0 };
+    if (typeof input.lat === 'function' && typeof input.lng === 'function') {
+        return { lat: input.lat(), lng: input.lng() };
+    }
+    return { lat: Number(input.lat), lng: Number(input.lng) };
+}
+
+function normalizePoint(input) {
+    const p = toLatLng(input);
+    return {
+        lat: Number(p.lat) || 0,
+        lng: Number(p.lng) || 0
+    };
+}
+
+function toRadians(deg) { return (deg * Math.PI) / 180; }
+function toDegrees(rad) { return (rad * 180) / Math.PI; }
+
+function computeDistanceBetween(a, b) {
+    const p1 = normalizePoint(a);
+    const p2 = normalizePoint(b);
+    const R = 6371000;
+    const dLat = toRadians(p2.lat - p1.lat);
+    const dLng = toRadians(p2.lng - p1.lng);
+    const lat1 = toRadians(p1.lat);
+    const lat2 = toRadians(p2.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const aa = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
+    return R * c;
+}
+
+function computeHeading(a, b) {
+    const p1 = normalizePoint(a);
+    const p2 = normalizePoint(b);
+    const lat1 = toRadians(p1.lat);
+    const lat2 = toRadians(p2.lat);
+    const dLng = toRadians(p2.lng - p1.lng);
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    return toDegrees(Math.atan2(y, x));
+}
+
+function computeOffset(from, distanceMeters, headingDegrees) {
+    const p = normalizePoint(from);
+    const R = 6371000;
+    const d = distanceMeters / R;
+    const heading = toRadians(headingDegrees);
+    const lat1 = toRadians(p.lat);
+    const lng1 = toRadians(p.lng);
+
+    const lat2 = Math.asin(
+        Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(heading)
+    );
+    const lng2 = lng1 + Math.atan2(
+        Math.sin(heading) * Math.sin(d) * Math.cos(lat1),
+        Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+    );
+
+    return {
+        lat: () => toDegrees(lat2),
+        lng: () => toDegrees(lng2)
+    };
+}
+
+class LeafletInfoWindow {
+    constructor() {
+        this._content = '';
+        this._popup = null;
+    }
+
+    setContent(content) {
+        this._content = content;
+        if (this._popup) this._popup.setContent(content);
+    }
+
+    open(map, marker) {
+        if (!window.L || !map || !marker || !marker._marker) return;
+        if (!this._popup) {
+            this._popup = window.L.popup({ closeButton: false, autoClose: true, className: 'sparking-popup' });
+        }
+        this._popup.setLatLng(marker._marker.getLatLng());
+        this._popup.setContent(this._content || '');
+        this._popup.openOn(map);
+    }
+}
+
+class LeafletAdvancedMarker {
+    constructor({ map, position, content, title, gmpDraggable }) {
+        if (!window.L) throw new Error('Leaflet no disponible');
+        this.content = content || document.createElement('div');
+        this.title = title || '';
+        this._map = null;
+        this._listeners = [];
+        this._marker = window.L.marker([position.lat, position.lng], {
+            draggable: !!gmpDraggable,
+            icon: window.L.divIcon({
+                className: 'sparking-marker',
+                html: this.content,
+                iconSize: null
+            }),
+            keyboard: false
+        });
+        if (this.title) {
+            this._marker.bindTooltip(this.title, { permanent: false, direction: 'top' });
+        }
+        if (map) this.map = map;
+    }
+
+    addListener(eventName, cb) {
+        if (!this._marker) return;
+        const eventMap = {
+            click: 'click',
+            drag: 'drag',
+            dragend: 'dragend'
+        };
+        const leafletEvent = eventMap[eventName] || eventName;
+        const handler = (e) => cb(e);
+        this._marker.on(leafletEvent, handler);
+        this._listeners.push({ leafletEvent, handler });
+    }
+
+    set map(nextMap) {
+        if (this._map === nextMap) return;
+        if (this._map) {
+            this._marker.removeFrom(this._map);
+        }
+        this._map = nextMap || null;
+        if (this._map) {
+            this._marker.addTo(this._map);
+        }
+    }
+
+    get map() {
+        return this._map;
+    }
+
+    set position(nextPosition) {
+        const p = normalizePoint(nextPosition);
+        this._marker.setLatLng([p.lat, p.lng]);
+    }
+
+    get position() {
+        const p = this._marker.getLatLng();
+        return { lat: p.lat, lng: p.lng };
+    }
+}
+
+function ensureLeafletLoaded() {
     return new Promise((resolve, reject) => {
-        // 1. Verificación perfecta: ¿Ya tenemos la función moderna?
-        if (window.google && window.google.maps && typeof google.maps.importLibrary === 'function') {
-            logger.debug("✅ API de Maps moderna detectada en caché.");
+        if (window.L) {
             resolve();
             return;
         }
 
-        // 2. Limpieza: Si hay un google maps viejo (sin importLibrary), avisamos
-        if (window.google && window.google.maps) {
-            console.warn("⚠️ Versión antigua de Maps detectada. Intentando forzar actualización...");
+        const leafletCss = document.querySelector('link[data-leaflet="true"]');
+        if (!leafletCss) {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            css.setAttribute('data-leaflet', 'true');
+            document.head.appendChild(css);
         }
 
-        // 3. Callback Global para asegurar la carga asíncrona
-        const callbackName = `initMap_${Date.now()}`;
-        window[callbackName] = () => {
-            logger.debug("✅ API de Maps cargada exitosamente vía Callback.");
-            delete window[callbackName];
-            resolve();
-        };
+        const existingScript = document.querySelector('script[data-leaflet="true"]');
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve());
+            existingScript.addEventListener('error', () => reject(new Error('No se pudo cargar Leaflet')));
+            return;
+        }
 
-        // 4. Inyección del Script (Forzando v=weekly y callback)
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&map_ids=${CONFIG.GOOGLE_MAPS_ID}&loading=async&v=weekly&callback=${callbackName}`;
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         script.async = true;
         script.defer = true;
-        script.onerror = (e) => {
-            console.error("❌ Error de red al cargar Maps:", e);
-            reject(e);
+        script.setAttribute('data-leaflet', 'true');
+        script.onload = () => {
+            logger.debug('✅ Leaflet cargado correctamente.');
+            resolve();
         };
-        
-        // Evitar duplicados en el DOM
-        if (!document.querySelector(`script[src*="${CONFIG.GOOGLE_MAPS_API_KEY}"]`)) {
-            document.head.appendChild(script);
-        } else {
-            // Si el script ya estaba en el DOM pero la API no cargó, esperamos un poco
-            logger.debug("⏳ El script ya está en el DOM, esperando inicialización...");
-            setTimeout(() => {
-                if (window.google && window.google.maps && typeof google.maps.importLibrary === 'function') {
-                    resolve();
-                } else {
-                    reject(new Error("Timeout esperando a Google Maps"));
-                }
-            }, 2000);
-        }
+        script.onerror = () => {
+            reject(new Error('No se pudo cargar el script de Leaflet'));
+        };
+        document.head.appendChild(script);
     });
 }
 
 export async function initMap(containerId) {
     try {
-        await loadGoogleMapsAPI();
-        // Intentamos usar la API modular (importLibrary). Si no está disponible, usamos el constructor clásico.
+        await ensureLeafletLoaded();
         let mapElement = document.getElementById(containerId);
         if (!mapElement) {
             console.warn(`El elemento con id '${containerId}' no fue encontrado. Intentando con id 'map' como alternativa.`);
@@ -73,55 +209,58 @@ export async function initMap(containerId) {
         }
         if (!mapElement) throw new Error(`El div con id '${containerId}' ni 'map' existe en el DOM.`);
 
-        try {
-            if (google && google.maps && typeof google.maps.importLibrary === 'function') {
-                const { Map } = await google.maps.importLibrary("maps");
-                const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
-                await google.maps.importLibrary("geometry");
+        const center = CONFIG.MAP_CENTER || { lat: -33.43306733282499, lng: -70.61471532552095 };
+        const zoom = CONFIG.MAP_ZOOM || 19;
 
-                mapState.AdvancedMarkerElement = AdvancedMarkerElement;
-                mapState.PinElement = PinElement;
-                mapState.geometry = google.maps.geometry;
+        const map = window.L.map(mapElement, {
+            zoomControl: false,
+            attributionControl: true
+        }).setView([center.lat, center.lng], zoom);
 
-                mapState.map = new Map(mapElement, {
-                    center: { lat: -33.43306733282499, lng: -70.61471532552095 },
-                    zoom: 19,
-                    mapId: CONFIG.GOOGLE_MAPS_ID,
-                    tilt: 0,
-                    disableDefaultUI: true,
-                    zoomControl: false,
-                    rotateControl: true,
-                    gestureHandling: 'greedy'
-                });
-
-                mapState.infoWindow = new google.maps.InfoWindow();
-                logger.debug('✅ Google Maps inicializado con importLibrary (modular).');
-                return mapState;
-            } else {
-                throw new Error('importLibrary no disponible');
+        window.L.tileLayer(
+            CONFIG.MAP_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                attribution: CONFIG.MAP_ATTRIBUTION || '&copy; OpenStreetMap contributors',
+                maxZoom: 19
             }
-        } catch (err) {
-            // Fallback: API clásica
-            console.warn('⚠️ importLibrary no disponible o falló. Usando constructor clásico de google.maps:', err);
-            mapState.AdvancedMarkerElement = null;
-            mapState.PinElement = null;
-            mapState.geometry = google.maps.geometry || null;
+        ).addTo(map);
 
-            mapState.map = new google.maps.Map(mapElement, {
-                center: { lat: -33.43306733282499, lng: -70.61471532552095 },
-                zoom: 20,
-                mapId: CONFIG.GOOGLE_MAPS_ID,
-                tilt: 0,
-                disableDefaultUI: true,
-                zoomControl: false,
-                rotateControl: true,
-                gestureHandling: 'greedy'
-            });
+        map.addListener = (eventName, cb) => {
+            if (eventName === 'zoom_changed') {
+                map.on('zoomend', () => cb());
+                return;
+            }
+            if (eventName === 'click') {
+                map.on('click', (e) => {
+                    cb({
+                        latLng: {
+                            lat: () => e.latlng.lat,
+                            lng: () => e.latlng.lng
+                        },
+                        lat: e.latlng.lat,
+                        lng: e.latlng.lng,
+                        originalEvent: e
+                    });
+                });
+                return;
+            }
+            map.on(eventName, cb);
+        };
 
-            mapState.infoWindow = new google.maps.InfoWindow();
-            logger.debug('✅ Google Maps inicializado con API clásica.');
-            return mapState;
-        }
+        mapState.map = map;
+        mapState.AdvancedMarkerElement = LeafletAdvancedMarker;
+        mapState.PinElement = null;
+        mapState.geometry = {
+            spherical: {
+                computeDistanceBetween,
+                computeHeading,
+                computeOffset
+            }
+        };
+        mapState.infoWindow = new LeafletInfoWindow();
+
+        logger.debug('✅ OpenStreetMap (Leaflet) inicializado.');
+        return mapState;
 
     } catch (error) {
         console.error("☠️ Error fatal iniciando mapa:", error);

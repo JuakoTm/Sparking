@@ -8,6 +8,22 @@ let startPoint = null;
 let previewPolyline = null;
 let ghostMarkers = [];
 
+function toLatLngObj(p) {
+    if (!p) return { lat: 0, lng: 0 };
+    if (typeof p.lat === 'function' && typeof p.lng === 'function') {
+        return { lat: p.lat(), lng: p.lng() };
+    }
+    return { lat: Number(p.lat), lng: Number(p.lng) };
+}
+
+function toLatLngAccessor(p) {
+    const point = toLatLngObj(p);
+    return {
+        lat: () => point.lat,
+        lng: () => point.lng
+    };
+}
+
 export function toggleLineBuilder(enable) {
     isBuilding = enable;
     if (!enable) resetBuilder();
@@ -47,32 +63,35 @@ export function handleMapClick(latLng) {
  * Previsualiza los puntos en la línea
  */
 export function previewLine(start, end, count) {
+    if (!window.L || !mapState.map || !mapState.geometry?.spherical) return;
+
     // Limpiar previos
     clearGhosts();
 
-    const path = [start, end];
+    const startPoint = toLatLngObj(start);
+    const endPoint = toLatLngObj(end);
+    const path = [
+        [startPoint.lat, startPoint.lng],
+        [endPoint.lat, endPoint.lng]
+    ];
     
     // Dibujar línea
-    previewPolyline = new google.maps.Polyline({
-        map: mapState.map,
-        path: path,
-        strokeColor: '#3b82f6',
-        strokeOpacity: 0.5,
-        strokeWeight: 2,
-        icons: [{
-            icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW },
-            offset: '100%'
-        }]
-    });
+    previewPolyline = window.L.polyline(path, {
+        color: '#3b82f6',
+        opacity: 0.5,
+        weight: 2,
+        dashArray: '6 8'
+    }).addTo(mapState.map);
 
     // Calcular interpolación
-    const spherical = google.maps.geometry.spherical;
-    const distance = spherical.computeDistanceBetween(start, end);
-    const heading = spherical.computeHeading(start, end);
+    const spherical = mapState.geometry.spherical;
+    const distance = spherical.computeDistanceBetween(startPoint, endPoint);
+    const heading = spherical.computeHeading(startPoint, endPoint);
     const step = distance / (count - 1 || 1);
 
     for (let i = 0; i < count; i++) {
-        const pos = spherical.computeOffset(start, i * step, heading);
+        const pos = spherical.computeOffset(startPoint, i * step, heading);
+        const posObj = toLatLngObj(pos);
         
         // Pin fantasma
         const div = document.createElement('div');
@@ -80,7 +99,7 @@ export function previewLine(start, end, count) {
         
         const marker = new mapState.AdvancedMarkerElement({
             map: mapState.map,
-            position: pos,
+            position: posObj,
             content: div
         });
         ghostMarkers.push(marker);
@@ -91,16 +110,21 @@ export function previewLine(start, end, count) {
  * Ejecuta la creación masiva
  */
 export async function executeBatchCreate(start, end, config) {
+    if (!mapState.geometry?.spherical) return 0;
+
+    const startPoint = toLatLngObj(start);
+    const endPoint = toLatLngObj(end);
+
     // config = { count, prefix, startNum }
-    const spherical = google.maps.geometry.spherical;
-    const distance = spherical.computeDistanceBetween(start, end);
-    const heading = spherical.computeHeading(start, end);
+    const spherical = mapState.geometry.spherical;
+    const distance = spherical.computeDistanceBetween(startPoint, endPoint);
+    const heading = spherical.computeHeading(startPoint, endPoint);
     const step = distance / (config.count - 1 || 1);
 
     let createdCount = 0;
 
     for (let i = 0; i < config.count; i++) {
-        const pos = spherical.computeOffset(start, i * step, heading);
+        const pos = toLatLngAccessor(spherical.computeOffset(startPoint, i * step, heading));
         // Formato ID: A-01, A-02...
         const num = parseInt(config.startNum) + i;
         const id = `${config.prefix}${num.toString().padStart(2, '0')}`;
@@ -122,7 +146,7 @@ function clearGhosts() {
     ghostMarkers.forEach(m => m.map = null);
     ghostMarkers = [];
     if (previewPolyline) {
-        previewPolyline.setMap(null);
+        previewPolyline.remove();
         previewPolyline = null;
     }
 }

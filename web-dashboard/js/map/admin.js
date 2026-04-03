@@ -9,6 +9,14 @@ let isAdminMode = false;
 let tempMarker = null;     // Pin temporal al crear
 let rulerLine = null;      // Línea de la regla
 
+function toPlainLatLng(input) {
+    if (!input) return { lat: 0, lng: 0 };
+    if (typeof input.lat === 'function' && typeof input.lng === 'function') {
+        return { lat: input.lat(), lng: input.lng() };
+    }
+    return { lat: Number(input.lat), lng: Number(input.lng) };
+}
+
 /**
  * Activa/Desactiva modo admin
  */
@@ -55,18 +63,18 @@ async function handleDragEnd(marker, allSpots) {
  * Dibuja la línea verde (Smart Ruler) al vecino más cercano
  */
 function updateRuler(movingMarker, allSpots) {
-    if (!mapState.map || !google.maps.geometry) return;
+    if (!mapState.map || !window.L || !mapState.geometry?.spherical) return;
 
     let minDist = Infinity;
     let nearest = null;
 
-    const currentPos = movingMarker.position;
+    const currentPos = toPlainLatLng(movingMarker.position);
 
     // Buscar el vecino más cercano
     allSpots.forEach(spot => {
         if (spot.id === movingMarker.title) return; // Ignorarse a sí mismo
-        const otherLoc = new google.maps.LatLng(spot.lat, spot.lng);
-        const dist = google.maps.geometry.spherical.computeDistanceBetween(currentPos, otherLoc);
+        const otherLoc = { lat: spot.lat, lng: spot.lng };
+        const dist = mapState.geometry.spherical.computeDistanceBetween(currentPos, otherLoc);
         
         if (dist < minDist && dist < 20) { // Solo si está a menos de 20 metros
             minDist = dist;
@@ -77,16 +85,18 @@ function updateRuler(movingMarker, allSpots) {
     // Dibujar línea
     if (nearest) {
         if (!rulerLine) {
-            rulerLine = new google.maps.Polyline({
-                map: mapState.map,
-                strokeColor: '#10b981', // Verde
-                strokeOpacity: 1.0,
-                strokeWeight: 2
-            });
+            rulerLine = window.L.polyline([], {
+                color: '#10b981',
+                opacity: 1,
+                weight: 2
+            }).addTo(mapState.map);
         }
-        rulerLine.setPath([currentPos, nearest]);
+        rulerLine.setLatLngs([
+            [currentPos.lat, currentPos.lng],
+            [nearest.lat, nearest.lng]
+        ]);
     } else if (rulerLine) {
-        rulerLine.setMap(null);
+        rulerLine.remove();
         rulerLine = null;
     }
 }
@@ -105,7 +115,7 @@ export function startCreateSpot() {
     
     tempMarker = new mapState.AdvancedMarkerElement({
         map: mapState.map,
-        position: center,
+        position: { lat: center.lat, lng: center.lng },
         content: pinDiv,
         gmpDraggable: true,
         title: "Nuevo Puesto"
@@ -123,8 +133,8 @@ export async function saveTempSpot(id, desc) {
     const pos = tempMarker.position;
     const result = await createSpot({
         id, 
-        lat: pos.lat, 
-        lng: pos.lng, 
+        lat: pos.lat,
+        lng: pos.lng,
         desc
     });
 

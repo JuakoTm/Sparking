@@ -1,32 +1,20 @@
 // js/auth/auth.js
 import { CONFIG } from '../config/config.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged, 
-    signOut,
-    sendEmailVerification,
-    sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Inicializar Firebase
-// Asegúrate de que CONFIG.FIREBASE esté definido en config.js
-const app = initializeApp(CONFIG.FIREBASE);
-const auth = getAuth(app);
+const supabase = createClient(CONFIG.SUPABASE.URL, CONFIG.SUPABASE.ANON_KEY);
 
 /**
- * Traduce códigos de error de Firebase a español amigable
+ * Traduce codigos de error de Auth a espanol amigable
  */
 function translateError(code) {
     const errors = {
-        'auth/email-already-in-use': 'Este correo ya está registrado.',
-        'auth/invalid-email': 'El correo no es válido.',
-        'auth/weak-password': 'La contraseña es muy débil (mínimo 6 caracteres).',
-        'auth/user-not-found': 'Usuario no encontrado.',
-        'auth/wrong-password': 'Contraseña incorrecta.',
-        'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.'
+        'user_already_exists': 'Este correo ya esta registrado.',
+        'invalid_credentials': 'Correo o contrasena incorrecta.',
+        'email_not_confirmed': 'Debes verificar tu correo primero.',
+        'invalid_email': 'El correo no es valido.',
+        'weak_password': 'La contrasena es muy debil (minimo 6 caracteres).',
+        'over_email_send_rate_limit': 'Demasiados intentos. Intenta mas tarde.'
     };
     return errors[code] || `Error desconocido: ${code}`;
 }
@@ -35,33 +23,44 @@ function translateError(code) {
 
 export async function registerUser(email, password) {
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await sendEmailVerification(userCredential.user);
-        return { success: true, user: userCredential.user, message: "Cuenta creada. Revisa tu correo." };
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+            return { success: false, message: translateError(error.code || error.message) };
+        }
+        return { success: true, user: data.user, message: 'Cuenta creada. Revisa tu correo.' };
     } catch (error) {
-        return { success: false, message: translateError(error.code) };
+        return { success: false, message: translateError(error.code || error.message) };
     }
 }
 
 export async function loginUser(email, password) {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        if (!user.emailVerified) {
-            // Opcional: Permitir login sin verificar o bloquearlo
-            // await signOut(auth);
-        return { success: false, message: "Debes verificar tu correo primero." };
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            return { success: false, message: translateError(error.code || error.message) };
         }
+
+        const user = data.user;
+        const session = data.session;
+        if (session?.access_token) {
+            localStorage.setItem('auth_token', session.access_token);
+        }
+        
+        if (CONFIG.SUPABASE.REQUIRE_EMAIL_CONFIRMATION && !user?.email_confirmed_at) {
+            await supabase.auth.signOut();
+            localStorage.removeItem('auth_token');
+            return { success: false, message: 'Debes verificar tu correo primero.' };
+        }
+
         return { success: true, user };
     } catch (error) {
-        return { success: false, message: translateError(error.code) };
+        return { success: false, message: translateError(error.code || error.message) };
     }
 }
 
 export async function logoutUser() {
     try {
-        await signOut(auth);
+        await supabase.auth.signOut();
         localStorage.removeItem('auth_token'); // Limpieza local
         return { success: true };
     } catch (error) {
@@ -72,10 +71,15 @@ export async function logoutUser() {
 
 export async function resetPasswordUser(email) {
     try {
-        await sendPasswordResetEmail(auth, email);
-        return { success: true, message: "Correo de recuperación enviado." };
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: CONFIG.SUPABASE.RESET_PASSWORD_REDIRECT_TO || window.location.origin,
+        });
+        if (error) {
+            return { success: false, message: translateError(error.code || error.message) };
+        }
+        return { success: true, message: 'Correo de recuperacion enviado.' };
     } catch (error) {
-        return { success: false, message: translateError(error.code) };
+        return { success: false, message: translateError(error.code || error.message) };
     }
 }
 
@@ -84,14 +88,36 @@ export async function resetPasswordUser(email) {
  * Se ejecutará cada vez que cambie el estado de auth
  */
 export function monitorAuthState(callback) {
-    onAuthStateChanged(auth, async (user) => {
+    const listener = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const user = session?.user || null;
         if (user) {
-            const token = await user.getIdToken();
-            localStorage.setItem('auth_token', token);
-            callback(user);
+            localStorage.setItem('auth_token', session.access_token);
+            let role = null;
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!error && data?.role) {
+                    role = data.role;
+                }
+            } catch (_err) {
+                // Si falla la consulta de perfil, seguimos con el usuario base
+            }
+
+            const normalizedUser = {
+                ...user,
+                role: role || user?.app_metadata?.role || null
+            };
+
+            if (typeof callback === 'function') callback(normalizedUser);
         } else {
             localStorage.removeItem('auth_token');
-            callback(null);
+            if (typeof callback === 'function') callback(null);
         }
     });
+
+    return listener;
 }

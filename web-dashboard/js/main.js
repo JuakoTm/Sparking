@@ -18,6 +18,22 @@ import { isValidChileanPlate } from './utils/validators.js';
 import { debounce } from './utils/helpers.js';
 import { logger } from './utils/logger.js';
 
+const ADMIN_EMAILS = new Set([
+    'joa.troncoso@duocuc.cl',
+    'admin@sparking.cl',
+    'sebastianecheverria2019@gmail.com'
+]);
+
+function isAdminUser(user) {
+    if (!user) return false;
+
+    const role = String(user.role || user?.app_metadata?.role || '').toLowerCase();
+    if (role === 'admin') return true;
+
+    const email = String(user.email || '').toLowerCase();
+    return !!(email && ADMIN_EMAILS.has(email));
+}
+
 // --- FUNCIÓN DE ZOOM Y RESALTADO (definida temprano para sidebar) ---
 function focusOnSpot(spotId) {
     console.log('🎯 focusOnSpot llamado con:', spotId);
@@ -52,12 +68,12 @@ function focusOnSpot(spotId) {
             MapCore.mapState.map.setZoom(18);
             setTimeout(() => {
                 MapCore.mapState.map.panTo({ lat: spot.lat, lng: spot.lng });
-                setTimeout(() => MapCore.mapState.map.setZoom(20), 400);
+                setTimeout(() => MapCore.mapState.map.setZoom(19), 400);
             }, 300);
         } else {
             // Si ya está cerca, panear suavemente y luego zoom
             MapCore.mapState.map.panTo({ lat: spot.lat, lng: spot.lng });
-            setTimeout(() => MapCore.mapState.map.setZoom(20), 400);
+            setTimeout(() => MapCore.mapState.map.setZoom(19), 400);
         }
         
         console.log('✅ Zoom ejecutado');
@@ -265,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mostrar/ocultar directamente el toolbar admin (sin botón de apertura)
         const toolbar = document.getElementById('admin-toolbar');
         if (!toolbar) return;
-        if (user && user.email === 'joa.troncoso@duocuc.cl') {
+        if (isAdminUser(user)) {
             logger.debug('✅ Admin detectado, mostrando toolbar admin');
             toolbar.classList.remove('hidden');
             toolbar.classList.add('show');
@@ -540,8 +556,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- FUNCIÓN AUXILIAR: CREAR UN PUESTO ---
 function createSingleSpot(latLng) {
-    const lat = latLng.lat();
-    const lng = latLng.lng();
+    const lat = (typeof latLng?.lat === 'function') ? latLng.lat() : latLng?.lat;
+    const lng = (typeof latLng?.lng === 'function') ? latLng.lng() : latLng?.lng;
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+        UI_Toasts.showToast('No se pudo leer la posicion seleccionada', 'error');
+        return;
+    }
     // Crear una previsualización del pin y esperar confirmación
     MapAdmin.createPreviewSpotAt({ lat: () => lat, lng: () => lng }, async (pos) => {
         // Aceptó: abrir modal de creación rellenando lat/lng con la posición final
@@ -1546,7 +1566,7 @@ function handleSpotClick(spotIdOrObj) {
     // Admin: Botón borrar
     const btnDelete = document.getElementById('btn-delete-spot');
     if (btnDelete) {
-        if (state.currentUser && state.currentUser.email === 'admin@sparking.cl') {
+        if (isAdminUser(state.currentUser)) {
             btnDelete.classList.remove('hidden');
             btnDelete.onclick = () => {
                 UI_Modals.showConfirmModal(`¿Eliminar puesto ${spot.id}?`, async () => {
@@ -1580,8 +1600,12 @@ async function processReservation(spotId) {
 
     const plateInput = document.getElementById('license-plate');
     const durationInput = document.getElementById('duration-select');
+    if (!plateInput || !durationInput) {
+        UI_Toasts.showToast('No se pudo leer el formulario de reserva', 'error');
+        return;
+    }
     
-    const plate = plateInput.value;
+    const plate = (plateInput.value || '').trim().toUpperCase();
     const duration = parseInt(durationInput.value);
 
     if (!isValidChileanPlate(plate)) {
@@ -1591,23 +1615,36 @@ async function processReservation(spotId) {
 
     // Feedback visual
     const btn = document.getElementById('btn-confirm-reserve');
+    if (!btn) {
+        UI_Toasts.showToast('No se encontró el botón de confirmación', 'error');
+        return;
+    }
     const originalText = btn.innerText;
     btn.innerText = "Procesando...";
     btn.disabled = true;
 
     try {
-        const result = await reserveSpot(spotId, plate, duration);
+        await reserveSpot(spotId, plate, duration);
         
         // Éxito
         UI_Sounds.playSound('success');
         UI_Toasts.showToast("Reserva confirmada exitosamente");
-        UI_Modals.closeModal('spot-detail-modal');
+        try {
+            UI_Modals.closeModal('spot-detail-modal');
+        } catch (e) {
+            // Fallback defensivo si falla animación de cierre
+            const modal = document.getElementById('spot-detail-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.add('opacity-0');
+            }
+        }
 
         // Guardar localmente para el timer (en memoria, no localStorage)
         const expiresAt = Date.now() + (duration * 60000);
         state.myReservation = { spotId, expiresAt };
 
-        fetchData(); // Refrescar inmediato
+        await fetchData(); // Refrescar inmediato
 
     } catch (error) {
         UI_Sounds.playSound('error');
@@ -1667,6 +1704,7 @@ function updateTimerUI(text) {
 
 function updateUserUI(user) {
     const btnLogin = document.getElementById('btn-login-nav');
+    const btnLogoutVisible = document.getElementById('btn-logout-visible');
     const userMenu = document.getElementById('user-menu-nav');
     const nameEl = document.getElementById('user-name');
     const avatarBtn = document.getElementById('user-avatar');
@@ -1674,6 +1712,7 @@ function updateUserUI(user) {
 
     if (user) {
         if(btnLogin) btnLogin.classList.add('hidden');
+        if(btnLogoutVisible) btnLogoutVisible.classList.remove('hidden');
         if(userMenu) userMenu.classList.remove('hidden');
         if(nameEl) nameEl.innerText = user.email.split('@')[0];
         // Popover handlers
@@ -1693,6 +1732,14 @@ function updateUserUI(user) {
         }
     } else {
         if(btnLogin) btnLogin.classList.remove('hidden');
+        const hasLocalToken = !!localStorage.getItem('auth_token');
+        if(btnLogoutVisible) {
+            if (hasLocalToken) {
+                btnLogoutVisible.classList.remove('hidden');
+            } else {
+                btnLogoutVisible.classList.add('hidden');
+            }
+        }
         if(userMenu) userMenu.classList.add('hidden');
         if(popover) popover.classList.add('hidden');
     }
@@ -1808,11 +1855,16 @@ function setupDOMListeners() {
 
     // 6. Logout
     const btnLogout = document.getElementById('btn-logout');
+    const btnLogoutVisible = document.getElementById('btn-logout-visible');
+    async function handleLogout() {
+        await logoutUser();
+        window.location.reload();
+    }
     if(btnLogout) {
-        btnLogout.addEventListener('click', async () => {
-            await logoutUser();
-            window.location.reload();
-        });
+        btnLogout.addEventListener('click', handleLogout);
+    }
+    if(btnLogoutVisible) {
+        btnLogoutVisible.addEventListener('click', handleLogout);
     }
 
     // 7. Cerrar Modal de Puesto
@@ -2110,7 +2162,10 @@ function setupDOMListeners() {
                 }
 
                 // Convertir distancia (metros) a coordenadas
-                const spherical = google.maps.geometry.spherical;
+                const spherical = MapCore.mapState?.geometry?.spherical;
+                if (!spherical) {
+                    throw new Error('Geometria del mapa no disponible');
+                }
                 const totalDistance = spherical.computeDistanceBetween(start, end);
                 const heading = spherical.computeHeading(start, end);
                 const step = totalDistance / (count - 1 || 1);

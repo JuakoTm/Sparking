@@ -33,14 +33,20 @@
       </div>
 
       <!-- Contenedor de Auth (gestionado por JS) -->
-      <div id="auth-header-container">
+      <div id="auth-header-container" class="flex items-center justify-end gap-3 min-w-0">
         <!-- Botón Login (visible si NO hay usuario) -->
         <button id="btn-login-nav" class="hidden px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">
           Iniciar Sesión
         </button>
 
+        <!-- Botón Logout visible (fallback robusto) -->
+        <button id="btn-logout-visible" class="hidden shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-colors">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Cerrar sesión</span>
+        </button>
+
         <!-- Menú Usuario (visible si HAY usuario) -->
-        <div id="user-menu-nav" class="hidden flex items-center gap-3 relative">
+        <div id="user-menu-nav" class="hidden shrink-0 flex items-center gap-3 relative">
           <!-- Avatar clickable -->
           <button id="user-avatar" class="relative w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 border border-slate-300 hover:ring-2 hover:ring-slate-300 transition">
             <i class="fa-solid fa-user text-sm"></i>
@@ -51,9 +57,6 @@
             <div class="absolute left-1/2 -translate-x-1/2 -top-[6px] w-0 h-0 border-l-5 border-l-transparent border-r-5 border-r-transparent border-b-5 border-b-white"></div>
             <span id="user-name" class="text-[11px] font-medium text-slate-700"></span>
           </div>
-          <button id="btn-logout" class="text-xs text-slate-400 hover:text-rose-600 font-medium">
-            <i class="fa-solid fa-right-from-bracket"></i>
-          </button>
         </div>
       </div>
     </div>
